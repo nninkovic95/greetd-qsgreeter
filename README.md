@@ -6,6 +6,8 @@ A [QuickShell](https://quickshell.org/)-based greeter for [greetd](https://sr.ht
 | :---: | :---: |
 | ![Users](docs/screenshot_users.png) | ![Login](docs/screenshot_login.png) |
 
+<video src="https://github.com/user-attachments/assets/b735015b-3ff1-487f-8bdd-55576835c9d0" controls width="100%"></video>
+
 ## 🪛 Installation
 Use _make_ to copy files into standard _quickshell_ directories. If _niri_ is present, the script
 will also install `qsgreeter-niri.kdl` into `/etc/greetd/`
