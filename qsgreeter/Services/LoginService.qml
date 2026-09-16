@@ -57,9 +57,10 @@ QtObject {
 				root.clear();
 			}
 
-			// Handle password request
-			else if (responseRequired && message.toLowerCase().includes("password")) {
-				Greetd.respond(root._password);
+			// Handle prompts: secret (echoResponse false) gets the stored password,
+			// visible (echoResponse true) gets an empty string
+			else if (responseRequired) {
+				Greetd.respond(echoResponse ? "" : root._password);
 			}
 		}
 
