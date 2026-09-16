@@ -24,21 +24,31 @@ sudo make uninstall
 ```
 
 ### Arch Linux
-Currenlty not in the AUR. Download the [PKGBUILD](PKGBUILD) file and run `makepkg`.
+Available in the AUR as [qsgreeter-hyprland-git](https://aur.archlinux.org/packages/qsgreeter-hyprland-git).
+It tracks this branch and pulls in `greetd`, `quickshell`, `hyprland`, `glib2` and `accountsservice`.
 
 ```sh
-mkdir greetd-qsgreeter
-cd greetd-qsgreeter
-curl -O https://raw.githubusercontent.com/taleroangel/greetd-qsgreeter/main/PKGBUILD
+paru -S qsgreeter-hyprland-git   # or: yay -S qsgreeter-hyprland-git
+```
+
+The package installs the greeter into `/etc/xdg/quickshell/qsgreeter` and the Hyprland config into
+`/etc/greetd/qsgreeter-hyprland.lua`. It does not edit `/etc/greetd/config.toml`; see
+[Using with Hyprland](#using-with-hyprland) for the two lines to add.
+
+Without an AUR helper:
+
+```sh
+git clone https://aur.archlinux.org/qsgreeter-hyprland-git.git
+cd qsgreeter-hyprland-git
 makepkg -si
 ```
 
+Manual install without a package:
+
 ```sh
-git clone https://github.com/taleroangel/greetd-qsgreeter
+git clone -b hyprland https://github.com/nninkovic95/greetd-qsgreeter
 cd greetd-qsgreeter
-sudo mkdir -p /etc/xdg/quickshell
-sudo cp -r qsgreeter /etc/xdg/quickshell/
-sudo chmod -R 755 /etc/xdg/quickshell/qsgreeter
+sudo make install
 ```
 
 ## 🚀 Launch
