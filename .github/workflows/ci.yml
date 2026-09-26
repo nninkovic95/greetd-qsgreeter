@@ -1,0 +1,69 @@
+name: CI
+
+# Lint the QML and check that the greeter installs and packages, on every
+# push and pull request. Publishing to the AUR is release.yml, on tags only.
+# Jobs run in an Arch container so qmllint, Quickshell and makepkg match what
+# the package is built against.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qmllint:
+    name: qmllint
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    timeout-minutes: 15
+    steps:
+      - name: Install tools
+        run: pacman -Syu --noconfirm --needed git jq qt6-declarative quickshell
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Syntax errors fail the job; other findings are annotations only.
+      - name: Lint QML
+        run: .github/scripts/qmllint.sh qsgreeter
+
+  build:
+    name: Install and package
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    timeout-minutes: 20
+    steps:
+      - name: Install tools
+        run: pacman -Syu --noconfirm --needed base-devel git pacman-contrib greetd quickshell
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: make install / uninstall into a scratch root
+        run: |
+          root=$(mktemp -d)
+          make install DESTDIR="$root"
+          test -f "$root/etc/xdg/quickshell/qsgreeter/shell.qml"
+          test -f "$root/usr/share/licenses/qsgreeter/LICENSE"
+          expected=$(find qsgreeter -type f | wc -l)
+          got=$(find "$root/etc/xdg/quickshell/qsgreeter" -type f | wc -l)
+          if [ "$got" -ne "$expected" ]; then
+            echo "::error::make install copied $got of $expected files from qsgreeter/"
+            exit 1
+          fi
+          make uninstall DESTDIR="$root"
+          if [ -n "$(find "$root" -type f)" ]; then
+            echo "::error::make uninstall left files behind"
+            find "$root" -type f
+            exit 1
+          fi
+
+      - name: Build the release package from this commit
+        run: .github/scripts/build-package.sh 0.0.0 local
