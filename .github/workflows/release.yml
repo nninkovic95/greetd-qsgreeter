@@ -16,6 +16,10 @@ concurrency:
   group: aur-release
   cancel-in-progress: false
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   aur:
     name: Validate, build and publish
@@ -34,6 +38,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0   # the tag check needs main's history
+
+      # The workspace is owned by the runner user, not the container's root.
+      - name: Trust the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Check the tag
         id: tag

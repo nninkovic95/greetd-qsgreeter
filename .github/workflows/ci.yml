@@ -17,6 +17,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   qmllint:
     name: qmllint
@@ -29,6 +33,10 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # The workspace is owned by the runner user, not the container's root.
+      - name: Trust the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       # Syntax errors fail the job; other findings are annotations only.
       - name: Lint QML
@@ -45,6 +53,10 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # The workspace is owned by the runner user, not the container's root.
+      - name: Trust the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: make install / uninstall into a scratch root
         run: |
