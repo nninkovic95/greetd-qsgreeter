@@ -33,6 +33,7 @@ ColumnLayout {
 
 		onFailure: {
 			root.badPassword = true;
+			passwordInput.clear();
 		}
 	}
 
@@ -134,6 +135,10 @@ ColumnLayout {
 						if (activeFocus) {
 							root.badPassword = false;
 						}
+					}
+
+					onTextEdited: {
+						root.badPassword = false;
 					}
 
 					Keys.onReturnPressed: root.submit()
