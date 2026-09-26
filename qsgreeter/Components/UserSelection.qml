@@ -25,7 +25,9 @@ Item {
 				anchors.centerIn: parent
 				onSelected: function(user) {
 					root.user = user;
-					stack.push(userLogin);
+					// The page keeps its own copy: a page left with Back is
+					// still fading out while the next one can be pushed
+					stack.push(userLogin, { user: user });
 				}
 			}
 		}
@@ -35,17 +37,19 @@ Item {
 	Component {
 		id: userLogin
 		FocusScope {
+			id: loginPage
+
+			/** User this page was pushed for */
+			required property var user
+
 			UserLogin {
-				user: root.user
+				user: loginPage.user
 				anchors.centerIn: parent
 
+				// Back to the list: nobody is selected any more
 				onCancel: {
-					stack.pop();
-				}
-
-				// Back to the list: clear the selection once the prompt is gone
-				Component.onDestruction: {
 					root.user = undefined;
+					stack.pop();
 				}
 			}
 		}
