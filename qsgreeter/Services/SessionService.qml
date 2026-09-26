@@ -1,12 +1,13 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import Quickshell
 import Quickshell.Io
 
 import "session_service_helper.js" as Helper
 
 /**
- * pathservice.qml
- * List available Wayland paths for login
+ * SessionService.qml
+ * List Wayland sessions available for login
  */
 QtObject {
 	id: root
@@ -21,16 +22,23 @@ QtObject {
 	 */
 	property var sessions: []
 
-	/** List of Wayland session files */
+	/** Paths of the Wayland session .desktop files */
 	property var paths: []
 
-	/** Process to load all session files */
-	property Process _procListpaths: Process {
-		id: proc
-		command: ["ls", "-1", "/usr/share/wayland-sessions/"]
+	/** Directory scanned for Wayland session files */
+	readonly property string sessionsDir: "/usr/share/wayland-sessions/"
+
+	/** Reload list of available Wayland sessions */
+	function reload() {
+		root._procListSessions.running = true;
+	}
+
+	/** Process to list the session files */
+	property Process _procListSessions: Process {
+		command: ["ls", "-1", root.sessionsDir]
 		stdout: SplitParser {
 			onRead: function(data) {
-				root.paths.push(`/usr/share/wayland-sessions/${data}`);
+				root.paths.push(root.sessionsDir + data);
 			}
 		}
 
@@ -49,30 +57,28 @@ QtObject {
 	property Instantiator _workerFactory: Instantiator {
 		model: root.paths
 		delegate: FileView {
-			id: file
-			path: Qt.resolvedUrl(modelData)
+			id: sessionFile
+
+			required property string modelData
+
+			path: Qt.resolvedUrl(sessionFile.modelData)
 			preload: true
 
 			onLoaded: {
-				const obj = Helper.parseDesktopFile(file.text());
-				console.log("Session successfully registered: " + obj["Name"]);
-				sessions.push({
-					name: obj["Name"] ?? "",
-					path: modelData,
-					props: obj
+				const props = Helper.parseDesktopFile(sessionFile.text());
+				console.log("Session successfully registered: " + props.Name);
+				root.sessions.push({
+					name: props.Name ?? "",
+					path: sessionFile.modelData,
+					props: props
 				});
 				root.sessionsChanged();
 			}
 		}
 	}
 
-	/** Reload list of available wayland paths */
-	function reload() {
-		root._procListpaths.running = true
-	}
-
-	/* Automatically load list of paths */
+	/* Automatically load list of sessions */
 	Component.onCompleted: {
-		reload()
+		root.reload();
 	}
 }

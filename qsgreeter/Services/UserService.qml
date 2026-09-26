@@ -1,6 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQml.Models
-import Quickshell
 import Quickshell.Io
 
 import "user_service_helper.js" as Helper
@@ -30,16 +31,31 @@ QtObject {
 	property bool ready: false /**< Users were loaded */
 	property bool error: false /**< Unable to load users */
 
+	/** Reload list of available system users */
+	function reload() {
+		root._procListCachedUsers.running = true;
+	}
+
+	/** Stop loading and report an error */
+	function _fail(reason: string) {
+		console.error(reason);
+		root.busy = false;
+		root.error = true;
+		root.usersChanged();
+	}
+
 	/** Call org.freedesktop.Accounts#ListCachedUsers */
 	property Process _procListCachedUsers: Process {
-		id: proc
 		command: [
 			"gdbus", "call", "--system",
 			"--dest", "org.freedesktop.Accounts",
 			"--object-path", "/org/freedesktop/Accounts",
 			"--method", "org.freedesktop.Accounts.ListCachedUsers"
 		]
-		stdout: StdioCollector {}
+		stdout: StdioCollector {
+			id: userListOutput
+		}
+
 		onStarted: {
 			console.log("Retrieving list of users from D-Bus");
 			root.paths = [];
@@ -48,17 +64,15 @@ QtObject {
 			root.ready = false;
 			root.error = false;
 		}
+
 		onExited: function(exitCode, exitStatus) {
-			if (exitCode == 0) {
-				/* Set path for each user and call Process */
-				root.paths = Helper.parseUserList(proc.stdout.text);
-				console.log("Listed users: " + root.paths);
-			} else {
-				console.error("Unable to retrieve user list from D-Bus");
-				root.busy = false;
-				root.error = true;
-				root.usersChanged();
+			if (exitCode !== 0) {
+				root._fail("Unable to retrieve user list from D-Bus");
+				return;
 			}
+			// Setting the paths starts one worker per user
+			root.paths = Helper.parseUserList(userListOutput.text);
+			console.log("Listed users: " + root.paths);
 		}
 	}
 
@@ -66,46 +80,42 @@ QtObject {
 	property Instantiator _workerFactory: Instantiator {
 		model: root.paths
 		delegate: Process {
-			id: proc
+			id: getUser
+
+			required property string modelData
+
 			running: true
 			command: [
 				"gdbus", "call", "--system",
 				"--dest", "org.freedesktop.Accounts",
 				"--method", "org.freedesktop.DBus.Properties.GetAll",
 				"org.freedesktop.Accounts.User",
-				"--object-path", modelData
+				"--object-path", getUser.modelData
 			]
-			stdout: StdioCollector {}
+			stdout: StdioCollector {
+				id: userDataOutput
+			}
+
 			onExited: function(exitCode, exitStatus) {
-				if (exitCode == 0) {
-					/* Append user data to json list */
-					const data = Helper.parseUserData(proc.stdout.text);
-					root.users.push(data);
-					/* Check if all users have been updated */
-					if (root.users.length >= root.paths.length) {
-						console.log(`Finished parsing of <${ root.users.length }> users`);
-						root.busy = false;
-						root.ready = true;
-						root.error = false;
-						root.usersChanged();
-					}
-				} else {
-					console.error("Failed to retrieve data for path: " + modelData);
+				if (exitCode !== 0) {
+					root._fail("Failed to retrieve data for path: " + getUser.modelData);
+					return;
+				}
+				root.users.push(Helper.parseUserData(userDataOutput.text));
+				// Publish the list once every user has been parsed
+				if (root.users.length >= root.paths.length) {
+					console.log(`Finished parsing of <${ root.users.length }> users`);
 					root.busy = false;
-					root.error = true;
+					root.ready = true;
+					root.error = false;
 					root.usersChanged();
 				}
 			}
 		}
 	}
 
-	/** Reload list of available system users */
-	function reload() {
-		root._procListCachedUsers.running = true
-	}
-
 	/* Automatically load list of users */
 	Component.onCompleted: {
-		reload()
+		root.reload();
 	}
 }

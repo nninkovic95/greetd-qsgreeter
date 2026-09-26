@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell
 import Quickshell.Services.Greetd
 
 /**
@@ -9,9 +8,16 @@ import Quickshell.Services.Greetd
 QtObject {
 	id: root
 
+	/* State of the current login attempt, reset by clear() */
 	property var _username: undefined
 	property var _password: undefined
 	property var _sessionExec: undefined
+
+	/** Issued when bad password is provided */
+	signal failure()
+
+	/** Greetd issued a message */
+	signal message(message: string)
 
 	/**
 	 * Start a login attempt
@@ -21,47 +27,36 @@ QtObject {
 	 * @param session {object} Session .desktop file as key-value pairs
 	 */
 	function login(user: var, password: string, session: var) {
-		// Set internal variables
 		root._username = user.UserName;
 		root._password = password;
 		root._sessionExec = session.Exec;
-		// Create greetd session
 		Greetd.createSession(root._username);
 	}
 
-	/** Clear internal state */
+	/** Clear internal state and cancel the greetd session */
 	function clear() {
-		// Set internal state
 		root._username = undefined;
 		root._password = undefined;
 		root._sessionExec = undefined;
-		// Cancel session
 		Greetd.cancelSession();
 	}
 
-	/** Issued when bad password is provided */
-	signal failure()
-
-	/** Greetd issued a message */
-	signal message(message: string)
-
 	/* Handle Greetd events */
 	property Connections _greetdConnection: Connections {
-		id: conn
 		target: Greetd
 
 		function onAuthMessage(message, error, responseRequired, echoResponse) {
-			// Handle generic messages
-			if (!error && !responseRequired && echoResponse) {
+			if (responseRequired) {
+				// Answer prompts by kind, never by prompt text: secret prompts
+				// (echoResponse false) get the stored password, visible ones
+				// get an empty string
+				Greetd.respond(echoResponse ? "" : root._password);
+			} else if (!error) {
+				// Informational message: show it and end this attempt
 				root.message(message);
 				root.clear();
 			}
-
-			// Handle prompts: secret (echoResponse false) gets the stored password,
-			// visible (echoResponse true) gets an empty string
-			else if (responseRequired) {
-				Greetd.respond(echoResponse ? "" : root._password);
-			}
+			// Error messages are ignored
 		}
 
 		function onAuthFailure(_) {
