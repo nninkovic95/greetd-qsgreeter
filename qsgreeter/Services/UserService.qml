@@ -44,8 +44,22 @@ QtObject {
 		root.usersChanged();
 	}
 
+	/** Stop loading and publish the users gathered so far */
+	function _finish() {
+		console.log(`Finished parsing of <${ root.users.length }> users`);
+		root.busy = false;
+		root.ready = true;
+		root.error = false;
+		root.usersChanged();
+	}
+
 	/** Call org.freedesktop.Accounts#ListCachedUsers */
 	property Process _procListCachedUsers: Process {
+		id: listCachedUsers
+
+		/* Set once the command has run, a command that cannot start never emits exited */
+		property bool _exited: false
+
 		command: [
 			"gdbus", "call", "--system",
 			"--dest", "org.freedesktop.Accounts",
@@ -58,6 +72,7 @@ QtObject {
 
 		onStarted: {
 			console.log("Retrieving list of users from D-Bus");
+			listCachedUsers._exited = false;
 			root.paths = [];
 			root.users = [];
 			root.busy = true;
@@ -66,6 +81,7 @@ QtObject {
 		}
 
 		onExited: function(exitCode, exitStatus) {
+			listCachedUsers._exited = true;
 			if (exitCode !== 0) {
 				root._fail("Unable to retrieve user list from D-Bus");
 				return;
@@ -73,6 +89,16 @@ QtObject {
 			// Setting the paths starts one worker per user
 			root.paths = Helper.parseUserList(userListOutput.text);
 			console.log("Listed users: " + root.paths);
+			// Nobody to wait for
+			if (root.paths.length === 0) {
+				root._finish();
+			}
+		}
+
+		onRunningChanged: {
+			if (!listCachedUsers.running && !listCachedUsers._exited) {
+				root._fail("Unable to start gdbus, is glib2 installed?");
+			}
 		}
 	}
 
@@ -104,11 +130,7 @@ QtObject {
 				root.users.push(Helper.parseUserData(userDataOutput.text));
 				// Publish the list once every user has been parsed
 				if (root.users.length >= root.paths.length) {
-					console.log(`Finished parsing of <${ root.users.length }> users`);
-					root.busy = false;
-					root.ready = true;
-					root.error = false;
-					root.usersChanged();
+					root._finish();
 				}
 			}
 		}

@@ -1,4 +1,5 @@
 {
 	"dateMessage": "Hoy es",
-	"dateFormat": "dd/MM/yyyy"
+	"dateFormat": "dd/MM/yyyy",
+	"userListEmpty": "No se encontraron cuentas de usuario"
 }

@@ -39,8 +39,15 @@ Item {
 			}
 		},
 		State {
+			name: "empty"
+			when: !userService.busy && !userService.error && userService.ready && userService.users.length === 0
+			PropertyChanges {
+				emptyComponent.opacity: 1
+			}
+		},
+		State {
 			name: "ready"
-			when: !userService.busy && !userService.error && userService.ready
+			when: !userService.busy && !userService.error && userService.ready && userService.users.length > 0
 			PropertyChanges {
 				usersComponent.opacity: 1
 			}
@@ -71,6 +78,14 @@ Item {
 		opacity: 0
 		text: L10n.userListError
 		padding: 40
+	}
+
+	/* No accounts message */
+	Placeholder {
+		id: emptyComponent
+		anchors.centerIn: parent
+		opacity: 0
+		text: L10n.userListEmpty
 	}
 
 	/* Actual list of users */

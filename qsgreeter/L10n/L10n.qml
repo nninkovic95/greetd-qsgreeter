@@ -22,6 +22,7 @@ Singleton {
 	property string dialogShutdown: "<l10n.dialogShutdown>"
 	property string dialogReboot: "<l10n.dialogReboot>"
 	property string userListError: "<l10n.userListError>"
+	property string userListEmpty: "<l10n.userListEmpty>"
 	property string userWelcome: "<l10n.userWelcome(%1)>"
 	property string userPrompt: "<l10n.userPrompt(%1)>"
 	property string passwordPlaceholder: "<l10n.passwordPlaceholder>"
