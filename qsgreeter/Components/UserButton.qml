@@ -146,7 +146,7 @@ Item {
 		},
 		State {
 			name: "pressed"
-			when: hover.hovered && tap.pressed
+			when: tap.pressed
 
 			PropertyChanges {
 				account.color: root.theme.background.pressed

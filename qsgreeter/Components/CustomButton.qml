@@ -53,7 +53,7 @@ Button {
 		},
 		State {
 			name: "pressed"
-			when: root.hovered && root.pressed
+			when: root.pressed
 
 			PropertyChanges {
 				backgroundRect.color: root.theme.background.pressed
