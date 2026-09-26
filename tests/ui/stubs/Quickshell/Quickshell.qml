@@ -8,4 +8,9 @@ import "Io/env.js" as Env
 QtObject {
 	/** Directory holding shell.qml, without a trailing slash */
 	readonly property string shellDir: Env.shellDir
+
+	/** Environment variable, or null when unset; the test runs with none of the ones the greeter reads */
+	function env(name) {
+		return null;
+	}
 }
