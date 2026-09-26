@@ -17,10 +17,8 @@ install:
 	find "qsgreeter" -type f -exec install -Dm644 "{}" "$(DESTDIR)$(QS_DIR)/{}" \;
 	find "$(DESTDIR)$(QS_DIR)/qsgreeter" -type d -exec chmod 755 {} +
 
-	@if command -v Hyprland >/dev/null 2>&1; then \
-		echo ":: Installed 'qsgreeter-hyprland.lua' into $(GREETD_DIR)"; \
-		install -Dm644 hyprland/qsgreeter-hyprland.lua $(DESTDIR)$(GREETD_DIR)/qsgreeter-hyprland.lua; \
-	fi
+	@echo ":: Installing 'qsgreeter-hyprland.lua' into $(GREETD_DIR)"
+	install -Dm644 hyprland/qsgreeter-hyprland.lua $(DESTDIR)$(GREETD_DIR)/qsgreeter-hyprland.lua
 
 	@echo ":: Installing license..."
 	install -Dm644 LICENSE -t $(DESTDIR)$(LICENSE_DIR)
