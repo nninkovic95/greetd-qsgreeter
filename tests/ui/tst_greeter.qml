@@ -10,9 +10,9 @@ import "stubs/Quickshell/Io/fakesystem.js" as System
 /*
  * Runs the real greeter against the stub Quickshell and greetd modules and
  * drives it like a user: pick a user, get the password wrong, then right.
- * A failed check means the greeter did not reach a usable state. Known,
- * non-blocking problems are printed with the HARNESS-WARNING marker, which
- * run.sh turns into annotations.
+ * A failed check means the greeter did not reach a usable state or lost
+ * keyboard focus on the way. Known, non-blocking problems can be printed
+ * with the HARNESS-WARNING marker, which run.sh turns into annotations.
  */
 TestCase {
 	id: tc
@@ -25,10 +25,6 @@ TestCase {
 
 	/** Step being run, 0 when it was skipped */
 	property int attempting: 0
-
-	function warn(message) {
-		console.warn("HARNESS-WARNING: " + message);
-	}
 
 	function needStep(step) {
 		tc.attempting = 0;
@@ -132,9 +128,8 @@ TestCase {
 		tryVerify(() => tc.userButtons().length === System.users.length, 10000,
 			"the user list never showed the " + System.users.length + " users (stuck on the spinner or the error box?)");
 		compare(tc.userButtons().map(b => b.realName).sort(), System.users.map(u => u.RealName).sort());
-		if (!tc.userButtons().some(b => b.activeFocus)) {
-			tc.warn("no user button has keyboard focus on the user list, so Enter does nothing");
-		}
+		tryVerify(() => tc.userButtons().some(b => b.activeFocus), 5000,
+			"no user button has keyboard focus on the user list, so Enter does nothing");
 		tc.screenshot("01-user-select");
 		tc.reached = 1;
 	}
@@ -146,9 +141,8 @@ TestCase {
 		tryVerify(() => tc.passwordField() !== null, 5000, "clicking a user did not show a password field");
 		tryVerify(() => tc.sessionPicker() !== null && tc.sessionPicker().displayText === "Hyprland", 5000,
 			"the session picker never offered the Hyprland session");
-		if (!tc.passwordField().activeFocus) {
-			tc.warn("the password field does not have keyboard focus after choosing a user (PR #7, bug 2)");
-		}
+		tryVerify(() => tc.passwordField().activeFocus, 5000,
+			"the password field does not have keyboard focus after choosing a user, so typing goes nowhere");
 		tc.screenshot("02-login");
 		tc.reached = 2;
 	}
@@ -168,6 +162,8 @@ TestCase {
 		tryVerify(() => Greetd.state === Greetd.Inactive, 5000, "the failed attempt did not end the greetd session");
 		tryVerify(() => tc.shownText(L10n.passwordError), 5000, "no \"" + L10n.passwordError + "\" message after a wrong password");
 		verify(tc.passwordField() !== null && tc.passwordField().enabled, "the password field is gone after a failed login");
+		compare(tc.passwordField().text, "", "the rejected password was left in the field");
+		verify(tc.passwordField().activeFocus, "the password field lost keyboard focus after a failed login");
 		tc.screenshot("03-wrong-password");
 		tc.reached = 3;
 	}
@@ -186,6 +182,10 @@ TestCase {
 		compare(tc.greetdCalls("createSession")[1].args[0], "alice");
 		compare(tc.greetdCalls("respond")[1].args[0], Greetd.password);
 		compare(Greetd.launchedCommand, ["Hyprland"]);
+		verify(Greetd.launchedEnvironment.indexOf("XDG_SESSION_TYPE=wayland") !== -1,
+			"the session was launched without XDG_SESSION_TYPE: " + JSON.stringify(Greetd.launchedEnvironment));
+		verify(Greetd.launchedEnvironment.indexOf("XDG_CURRENT_DESKTOP=Hyprland") !== -1,
+			"the session was launched without XDG_CURRENT_DESKTOP from DesktopNames: " + JSON.stringify(Greetd.launchedEnvironment));
 		tc.reached = 4;
 	}
 

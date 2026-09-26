@@ -26,6 +26,9 @@ QtObject {
 	/** The command passed to a successful launch(), or null */
 	property var launchedCommand: null
 
+	/** The environment passed with it, or null */
+	property var launchedEnvironment: null
+
 	signal authMessage(string message, bool error, bool responseRequired, bool echoResponse)
 	signal authFailure(string message)
 	signal readyToLaunch()
@@ -89,6 +92,7 @@ QtObject {
 		}
 		root.state = Greetd.Launching;
 		root.launchedCommand = command;
+		root.launchedEnvironment = environment ?? [];
 		root.launched();
 	}
 }
