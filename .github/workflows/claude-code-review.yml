@@ -1,27 +1,36 @@
 name: Claude Code Review
 
+# Automatic review of PRs that touch the greeter, its packaging or the
+# compositor configs. Repo-specific review rules live in CLAUDE.md, which the
+# code-review plugin reads.
+
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    paths:
+      - "qsgreeter/**"
+      - "niri/**"
+      - "hyprland/**"
+      - "Makefile"
+      - "PKGBUILD"
+      - ".github/workflows/**"
+      - "CLAUDE.md"
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true   # a new push supersedes the running review
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-
+    # Skip drafts, and PRs from forks (secrets are not available to them).
+    if: |
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write   # post inline review comments
       issues: read
       id-token: write
 
@@ -39,7 +48,4 @@ jobs:
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
-          claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment"'
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
-
+          claude_args: '--max-turns 30 --allowedTools "mcp__github_inline_comment__create_inline_comment"'
