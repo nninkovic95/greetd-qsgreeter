@@ -88,8 +88,14 @@ QtObject {
 		}
 
 		function onError(error) {
+			// With no session left this is greetd's reply to the cancel sent
+			// after a failed attempt: its PAM worker has already exited, so
+			// the cancel could not be delivered. The failure has been shown
+			if (Greetd.state === GreetdState.Inactive) {
+				return;
+			}
 			// greetd refused a request (for example the session failed to
-			// start); quickshell has already dropped the session
+			// start); quickshell drops the session right after this
 			console.error("greetd error: " + error);
 			root.clear();
 			root.message(error, true);

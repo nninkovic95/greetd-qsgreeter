@@ -159,8 +159,12 @@ TestCase {
 		compare(tc.greetdCalls("createSession")[0].args[0], "alice");
 		tryVerify(() => tc.greetdCalls("respond").length === 1, 5000, "the greeter never answered the password prompt");
 		compare(tc.greetdCalls("respond")[0].args[0], "wrong");
-		tryVerify(() => Greetd.state === Greetd.Inactive, 5000, "the failed attempt did not end the greetd session");
+		tryVerify(() => Greetd.state === GreetdState.Inactive, 5000, "the failed attempt did not end the greetd session");
 		tryVerify(() => tc.shownText(L10n.passwordError), 5000, "no \"" + L10n.passwordError + "\" message after a wrong password");
+		// greetd's error reply to the cancel that follows the failure must not replace the message
+		wait(20);
+		verify(tc.shownText(L10n.passwordError), "\"" + L10n.passwordError + "\" was replaced after the failure (by greetd's reply to the cancel?)");
+		verify(!tc.shownText(Greetd.cancelError), "greetd's reply to the post-failure cancel is shown as the login error");
 		verify(tc.passwordField() !== null && tc.passwordField().enabled, "the password field is gone after a failed login");
 		compare(tc.passwordField().text, "", "the rejected password was left in the field");
 		verify(tc.passwordField().activeFocus, "the password field lost keyboard focus after a failed login");
