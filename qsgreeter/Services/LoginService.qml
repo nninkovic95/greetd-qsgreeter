@@ -13,6 +13,9 @@ QtObject {
 	property var _password: undefined
 	property var _sessionExec: undefined
 
+	/** True while greetd is authenticating on our behalf */
+	property bool _active: false
+
 	/** Issued when bad password is provided */
 	signal failure()
 
@@ -30,11 +33,13 @@ QtObject {
 		root._username = user.UserName;
 		root._password = password;
 		root._sessionExec = session.Exec;
+		root._active = true;
 		Greetd.createSession(root._username);
 	}
 
 	/** Clear internal state and cancel the greetd session */
 	function clear() {
+		root._active = false;
 		root._username = undefined;
 		root._password = undefined;
 		root._sessionExec = undefined;
@@ -66,7 +71,21 @@ QtObject {
 
 		function onReadyToLaunch() {
 			console.log("Launching session " + root._sessionExec);
+			// From here the session belongs to greetd, never cancel it
+			root._active = false;
 			Greetd.launch([root._sessionExec]);
+		}
+	}
+
+	/*
+	 * This service dies with the login page. If greetd is still
+	 * authenticating, cancel: a success arriving afterwards would leave
+	 * greetd in ReadyToLaunch with nobody to launch the session, and
+	 * every later attempt would be ignored.
+	 */
+	Component.onDestruction: {
+		if (root._active) {
+			root.clear();
 		}
 	}
 }
