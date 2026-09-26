@@ -35,6 +35,7 @@ ComboBox {
 		id: popup
 		y: (control.height - 1)
 		width: control.width
+		padding: control.padding
 		height: popup.contentItem.implicitHeight + (control.padding * 2)
 
 		contentItem: ListView {
@@ -61,7 +62,7 @@ ComboBox {
 		required property int index
 
 		highlighted: control.highlightedIndex === index
-		width: control.width
+		width: control.width - (control.padding * 2)
 
 		contentItem: Text {
 			text: delegate.model[control.textRole]
@@ -70,9 +71,8 @@ ComboBox {
 		}
 
 		background: Rectangle {
-			width: popup.width - (control.padding * 2)
 			radius: Theme.style.promptInputRadius
-			color: delegate.highlighted ? Theme.colors.secondary : Theme.colors.surfaceContrast
+			color: delegate.highlighted ? Theme.colors.secondary : Theme.colors.surfaceBright
 		}
 	}
 }
