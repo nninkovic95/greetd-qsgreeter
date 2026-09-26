@@ -6,9 +6,11 @@ A [QuickShell](https://quickshell.org/)-based greeter for [greetd](https://sr.ht
 | :---: | :---: |
 | ![Users](docs/screenshot_users.png) | ![Login](docs/screenshot_login.png) |
 
-<video src="https://github.com/nninkovic95/greetd-qsgreeter/raw/main/docs/video.mp4" controls width="100%"></video>
-
 [Demo video](docs/video.mp4) (H.264/AAC MP4, 14 s)
+
+<!-- GitHub strips <video> tags from READMEs. For a player that plays inline,
+     drop docs/video.mp4 onto the README editor once and paste the URL GitHub
+     gives it on a line of its own. -->
 
 ## 📋 Requirements
 
