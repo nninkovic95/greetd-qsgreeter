@@ -85,12 +85,13 @@ ColumnLayout {
 			Layout.preferredHeight: Theme.style.accountSize
 		}
 
-		/* Prompt */
+		/* Prompt, promptSize wide unless its label needs more room (whole pixels, like an implicit size) */
 		Column {
-			Layout.preferredWidth: Theme.style.promptSize
+			Layout.preferredWidth: Math.max(Theme.style.promptSize, Math.ceil(prompt.implicitWidth))
 			spacing: Theme.style.promptSpacing
 
 			Text {
+				id: prompt
 				textFormat: Text.StyledText
 				text: root.user ? root.getUserPrompt(root.user.UserName) : ""
 				color: Theme.colors.surfaceContrast
