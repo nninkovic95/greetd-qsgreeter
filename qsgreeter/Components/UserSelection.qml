@@ -1,7 +1,8 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 
-import qs.Services
 import qs.Theme
 
 /**
@@ -42,6 +43,7 @@ Item {
 					stack.pop();
 				}
 
+				// Back to the list: clear the selection once the prompt is gone
 				Component.onDestruction: {
 					root.user = undefined;
 				}

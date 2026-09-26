@@ -1,7 +1,8 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import Quickshell
 
 import qs.Theme
 import qs.Services
@@ -15,38 +16,35 @@ import qs.L10n
 Item {
 	id: root
 
+	/** User was selected, pass user object as param */
+	signal selected(user: var)
+
 	UserService {
 		id: userService
 	}
-
-	/** User was selected, pass user object as param */
-	signal selected(user: var)
 
 	states: [
 		State {
 			name: "busy"
 			when: userService.busy
 			PropertyChanges {
-				target: busyComponent
-				opacity: 1
+				busyComponent.opacity: 1
 			}
 		},
 		State {
 			name: "error"
 			when: !userService.busy && userService.error
 			PropertyChanges {
-				target: errorComponent
-				opacity: 1
+				errorComponent.opacity: 1
 			}
 		},
 		State {
 			name: "ready"
 			when: !userService.busy && !userService.error && userService.ready
 			PropertyChanges {
-				target: usersComponent
-				opacity: 1
+				usersComponent.opacity: 1
 			}
-		},
+		}
 	]
 
 	transitions: Transition {
@@ -83,10 +81,8 @@ Item {
 		opacity: 0
 
 		Repeater {
-			id: repeater
 			model: userService.users
 			delegate: UserButton {
-
 				required property int index
 				required property var modelData
 
@@ -99,15 +95,11 @@ Item {
 				onClicked: root.selected(modelData)
 
 				// Default enter action
-				Keys.onPressed: (event) => {
-					if (event.key === Qt.Key_Return) {
-						root.selected(modelData);
-						event.accepted = true;
-					}
-				}
+				Keys.onReturnPressed: root.selected(modelData)
 
+				// Focus the first user so Enter selects it
 				Component.onCompleted: {
-					if (index == 0) {
+					if (index === 0) {
 						forceActiveFocus();
 					}
 				}

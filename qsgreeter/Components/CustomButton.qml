@@ -14,7 +14,7 @@ Button {
 	property ButtonColors theme: ButtonColors {}
 
 	/** Override default radius */
-	property alias radius: background.radius
+	property alias radius: backgroundRect.radius
 
 	hoverEnabled: true
 
@@ -22,7 +22,7 @@ Button {
 	palette.buttonText: root.theme.foreground.inactive
 
 	background: Rectangle {
-		id: background
+		id: backgroundRect
 		radius: (Math.max(root.height, root.width) / 2)
 		color: root.theme.background.inactive
 
@@ -39,14 +39,9 @@ Button {
 			when: root.hovered && !root.pressed
 
 			PropertyChanges {
-				target: background
-				color: root.theme.background.hover
-			}
-
-			PropertyChanges {
-				target: root
-				icon.color: root.theme.foreground.hover
-				palette.buttonText: root.theme.foreground.hover
+				backgroundRect.color: root.theme.background.hover
+				root.icon.color: root.theme.foreground.hover
+				root.palette.buttonText: root.theme.foreground.hover
 			}
 		},
 		State {
@@ -54,16 +49,10 @@ Button {
 			when: root.hovered && root.pressed
 
 			PropertyChanges {
-				target: background
-				color: root.theme.background.pressed
+				backgroundRect.color: root.theme.background.pressed
+				root.icon.color: root.theme.foreground.pressed
+				root.palette.buttonText: root.theme.foreground.pressed
 			}
-
-			PropertyChanges {
-				target: root
-				icon.color: root.theme.foreground.pressed
-				palette.buttonText: root.theme.foreground.pressed
-			}
-		},
+		}
 	]
-
 }
