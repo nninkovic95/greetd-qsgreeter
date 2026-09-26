@@ -50,6 +50,9 @@ jobs:
           prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
           # The plugin reads the PR and posts its summary through gh, so the
           # gh commands it declares must be allowed too, not just inline comments.
+          # The list matches the plugin's own allowed-tools. The log only counts
+          # permission denials; to see which calls were denied, set
+          # show_full_output: true for one run or read the execution output.
           claude_args: >-
-            --max-turns 30
+            --max-turns 25
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr list:*),Bash(gh pr comment:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh search:*)"
