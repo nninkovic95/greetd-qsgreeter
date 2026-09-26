@@ -52,9 +52,8 @@ QtObject {
 				// get an empty string
 				Greetd.respond(echoResponse ? "" : root._password);
 			} else if (!error) {
-				// Informational message: show it and end this attempt
+				// Informational message: show it, the conversation continues
 				root.message(message);
-				root.clear();
 			}
 			// Error messages are ignored
 		}
