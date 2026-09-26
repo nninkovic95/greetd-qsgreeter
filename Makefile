@@ -17,9 +17,9 @@ install:
 	find "qsgreeter" -type f -exec install -Dm644 "{}" "$(DESTDIR)$(QS_DIR)/{}" \;
 	find "$(DESTDIR)$(QS_DIR)/qsgreeter" -type d -exec chmod 755 {} +
 
-	@if command -v niri >/dev/null 2>&1; then \
-		echo ":: Installed 'qsgreeter-niri.kdl' into $(GREETD_DIR)"; \
-		install -Dm644 niri/qsgreeter-niri.kdl $(DESTDIR)$(GREETD_DIR)/qsgreeter-niri.kdl; \
+	@if command -v Hyprland >/dev/null 2>&1; then \
+		echo ":: Installed 'qsgreeter-hyprland.lua' into $(GREETD_DIR)"; \
+		install -Dm644 hyprland/qsgreeter-hyprland.lua $(DESTDIR)$(GREETD_DIR)/qsgreeter-hyprland.lua; \
 	fi
 
 	@echo ":: Installing license..."
@@ -31,6 +31,6 @@ install:
 uninstall:
 	@echo ":: Removing qsgreeter..."
 	rm -rf $(DESTDIR)$(QS_DIR)/qsgreeter
-	rm -f $(DESTDIR)$(GREETD_DIR)/qsgreeter-niri.kdl
+	rm -f $(DESTDIR)$(GREETD_DIR)/qsgreeter-hyprland.lua
 	rm -rf $(DESTDIR)$(LICENSE_DIR)
 	@echo ":: Uninstallation complete."

@@ -9,8 +9,8 @@ A [QuickShell](https://quickshell.org/)-based greeter for [greetd](https://sr.ht
 <video src="https://github.com/user-attachments/assets/b735015b-3ff1-487f-8bdd-55576835c9d0" controls width="100%"></video>
 
 ## 🪛 Installation
-Use _make_ to copy files into standard _quickshell_ directories. If _niri_ is present, the script
-will also install `qsgreeter-niri.kdl` into `/etc/greetd/`
+Use _make_ to copy files into standard _quickshell_ directories. If _Hyprland_ is present, the script
+will also install `qsgreeter-hyprland.lua` into `/etc/greetd/`
 
 ```sh
 git clone https://github.com/taleroangel/greetd-qsgreeter
@@ -24,21 +24,31 @@ sudo make uninstall
 ```
 
 ### Arch Linux
-Currenlty not in the AUR. Download the [PKGBUILD](PKGBUILD) file and run `makepkg`.
+Available in the AUR as [qsgreeter-hyprland-git](https://aur.archlinux.org/packages/qsgreeter-hyprland-git).
+It tracks this branch and pulls in `greetd`, `quickshell`, `hyprland`, `glib2` and `accountsservice`.
 
 ```sh
-mkdir greetd-qsgreeter
-cd greetd-qsgreeter
-curl -O https://raw.githubusercontent.com/taleroangel/greetd-qsgreeter/main/PKGBUILD
+paru -S qsgreeter-hyprland-git   # or: yay -S qsgreeter-hyprland-git
+```
+
+The package installs the greeter into `/etc/xdg/quickshell/qsgreeter` and the Hyprland config into
+`/etc/greetd/qsgreeter-hyprland.lua`. It does not edit `/etc/greetd/config.toml`; see
+[Using with Hyprland](#using-with-hyprland) for the two lines to add.
+
+Without an AUR helper:
+
+```sh
+git clone https://aur.archlinux.org/qsgreeter-hyprland-git.git
+cd qsgreeter-hyprland-git
 makepkg -si
 ```
 
+Manual install without a package:
+
 ```sh
-git clone https://github.com/taleroangel/greetd-qsgreeter
+git clone -b hyprland https://github.com/nninkovic95/greetd-qsgreeter
 cd greetd-qsgreeter
-sudo mkdir -p /etc/xdg/quickshell
-sudo cp -r qsgreeter /etc/xdg/quickshell/
-sudo chmod -R 755 /etc/xdg/quickshell/qsgreeter
+sudo make install
 ```
 
 ## 🚀 Launch
@@ -49,19 +59,24 @@ To use **qsgreeter**, run the following command from your chosen Wayland composi
 quickshell -c qsgreeter
 ```
 
-i.e, running from Niri `spawn-at-startup "quickshell" "-c" "qsgreeter"`
+i.e, running from Hyprland `hl.exec_cmd("quickshell -c qsgreeter")`
 
-### Using with Niri
-If you have [niri](https://github.com/niri-wm/niri) installed, you can use the provided [niri configuration file](niri/qsgreeter-niri.kdl) to start the greeter automatically. Place the configuration file at `/etc/greetd/qsgreeter-niri.kdl` (Automatically installed when using `makepkg` on _Arch_) and edit `/etc/greetd/config.toml` to launch niri with the specified configuration:
+### Using with Hyprland
+If you have [Hyprland](https://hypr.land) installed, you can use the provided [Hyprland configuration file](hyprland/qsgreeter-hyprland.lua) to start the greeter automatically. Place the configuration file at `/etc/greetd/qsgreeter-hyprland.lua` (Automatically installed when using `makepkg` on _Arch_) and edit `/etc/greetd/config.toml` to launch Hyprland with the specified configuration:
 
 ```toml
 [terminal]
 vt = 1
 
 [default_session]
-command = "niri --config /etc/greetd/qsgreeter-niri.kdl"
+command = "start-hyprland -- --config /etc/greetd/qsgreeter-hyprland.lua"
 user = "greeter"
 ```
+
+The configuration uses Hyprland's Lua config format, selected by the `.lua` extension. It starts
+the greeter, maximizes its window, and exits Hyprland once the greeter quits so greetd can launch
+the selected session. `start-hyprland` is Hyprland's watchdog launcher; running the `Hyprland`
+binary directly works too but shows a warning banner on the greeter screen.
 
 ## 🎨 Customization
 
