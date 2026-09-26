@@ -24,6 +24,11 @@ Button {
 	icon.color: root.theme.foreground.inactive
 	palette.buttonText: root.theme.foreground.inactive
 
+	// A focused Button only reacts to Space; Return and the keypad's Enter
+	// activate it too, as they select a user and submit the password
+	Keys.onReturnPressed: root.clicked()
+	Keys.onEnterPressed: root.clicked()
+
 	background: Rectangle {
 		id: backgroundRect
 		radius: (Math.max(root.height, root.width) / 2)
