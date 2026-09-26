@@ -55,7 +55,7 @@ ColumnLayout {
 			root.message = L10n.sessionListError;
 			return;
 		}
-		root.loginService.login(root.user, passwordInput.text, root.session.props);
+		root.loginService.login(root.user, passwordInput.text, root.session);
 	}
 
 	/** Message text */
