@@ -38,10 +38,6 @@ Item {
 		radius: (width / 2)
 		color: root.theme.background.inactive
 
-		/* Keyboard focus ring */
-		border.width: root.activeFocus ? Theme.style.borderWidth : 0
-		border.color: Theme.colors.primary
-
 		/* Profile Image Fallback */
 		Text {
 			id: iconText
@@ -88,6 +84,15 @@ Item {
 			maskSource: ShaderEffectSource {
 				sourceItem: mask
 			}
+		}
+
+		/* Keyboard focus ring, above the picture */
+		Rectangle {
+			anchors.fill: parent
+			radius: (width / 2)
+			color: "transparent"
+			border.width: root.activeFocus ? Theme.style.borderWidth : 0
+			border.color: Theme.colors.primary
 		}
 
 		/* Animations */
