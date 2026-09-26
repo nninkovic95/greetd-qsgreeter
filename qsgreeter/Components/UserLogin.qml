@@ -80,7 +80,8 @@ ColumnLayout {
 	Text {
 		text: (root.message !== "") ? root.message : (root.badPassword ? L10n.passwordError : "")
 		textFormat: Text.PlainText
-		visible: root.badPassword || root.message !== ""
+		// Always laid out, so showing a message does not move the prompt
+		opacity: (root.badPassword || root.message !== "") ? 1 : 0
 		Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
 		Layout.bottomMargin: Theme.style.accountSpacing
 
