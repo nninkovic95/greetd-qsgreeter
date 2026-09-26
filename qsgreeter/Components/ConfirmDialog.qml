@@ -15,6 +15,9 @@ Dialog {
 	/** Message to show */
 	required property string message
 
+	/** Item that had keyboard focus before the dialog opened, focus returns to it on close */
+	property Item _focusBefore: null
+
 	anchors.centerIn: parent
 	modal: true
 
@@ -29,6 +32,18 @@ Dialog {
 
 	enter: PopupEnterTransition {}
 	exit: PopupExitTransition {}
+
+	onAboutToShow: {
+		const window = root.parent ? root.parent.Window.window : null;
+		root._focusBefore = window ? window.activeFocusItem : null;
+	}
+
+	// Qt 6.6 leaves focus on the overlay after a modal popup closes
+	onClosed: {
+		if (root._focusBefore) {
+			root._focusBefore.forceActiveFocus();
+		}
+	}
 
 	Column {
 		anchors.fill: parent
