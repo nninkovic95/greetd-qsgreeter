@@ -18,6 +18,9 @@ Button {
 
 	hoverEnabled: true
 
+	// Reachable with Tab, but a click leaves keyboard focus where it was
+	focusPolicy: Qt.TabFocus
+
 	icon.color: root.theme.foreground.inactive
 	palette.buttonText: root.theme.foreground.inactive
 
