@@ -71,19 +71,27 @@ QtObject {
 	// Duration for large animations
 	property int animationSpeedLarge: 300
 
-	/** Apply scale to every numeric field */
+	/* Values behind the last applyScale(), raw and as written, keyed by property */
+	property var _raw: ({})
+	property var _scaled: ({})
+
+	/**
+	 * Apply scale to every numeric field (except scale itself and the
+	 * animation timings). Safe to call again after a reload: a property
+	 * still holding the value written last time is scaled from its
+	 * remembered raw value rather than compounded.
+	 */
 	function applyScale() {
 		const scale = root.scale;
 		for (const prop in root) {
 			const value = root[prop];
-			// Only numeric values
-			if (typeof value === "number") {
-				// Ignore animations
-				if (prop.includes("animation")) {
-					continue;
-				}
-				root[prop] = value * scale;
+			if (typeof value !== "number" || prop === "scale" || prop.includes("animation")) {
+				continue;
 			}
+			const raw = (prop in root._scaled && root._scaled[prop] === value) ? root._raw[prop] : value;
+			root._raw[prop] = raw;
+			root[prop] = raw * scale;
+			root._scaled[prop] = root[prop];
 		}
 	}
 }
