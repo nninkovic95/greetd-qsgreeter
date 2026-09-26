@@ -49,7 +49,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Install tools
-        run: pacman -Syu --noconfirm --needed base-devel git pacman-contrib greetd quickshell glib2 accountsservice
+        run: pacman -Syu --noconfirm --needed base-devel git namcap pacman-contrib greetd quickshell glib2 accountsservice
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -77,8 +77,26 @@ jobs:
             exit 1
           fi
 
+      # The same namcap checks as release.yml, so a packaging error shows up
+      # here rather than after a tag is pushed.
+      - name: Validate PKGBUILD with namcap
+        run: |
+          namcap aur/PKGBUILD | tee namcap-pkgbuild.txt
+          if grep -q ' E: ' namcap-pkgbuild.txt; then
+            echo "::error::namcap reported errors in aur/PKGBUILD"
+            exit 1
+          fi
+
       - name: Build the release package from this commit
         run: .github/scripts/build-package.sh 0.0.0 local
+
+      - name: Validate the built package with namcap
+        run: |
+          namcap aur-build/*.pkg.tar.zst | tee namcap-package.txt
+          if grep -q ' E: ' namcap-package.txt; then
+            echo "::error::namcap reported errors in the built package"
+            exit 1
+          fi
 
   ui:
     name: Greeter UI
