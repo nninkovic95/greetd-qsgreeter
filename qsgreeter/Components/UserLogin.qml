@@ -16,8 +16,8 @@ ColumnLayout {
 	/** User to show */
 	required property var user
 
-	/** Currently selected session */
-	property var session: undefined
+	/** Currently selected session, follows the picker and the list behind it */
+	property var session: root.sessionService.sessions[sessionInput.currentIndex]
 
 	/** Message to show above the prompt */
 	property string message: ""
@@ -196,10 +196,6 @@ ColumnLayout {
 				// Each session is an object, show its "name"
 				model: root.sessionService.sessions
 				textRole: "name"
-
-				onCurrentIndexChanged: {
-					root.session = sessionInput.model[sessionInput.currentIndex];
-				}
 			}
 		}
 	}
