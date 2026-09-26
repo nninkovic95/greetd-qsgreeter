@@ -1,0 +1,112 @@
+name: Release
+
+# Publish aur/PKGBUILD to the AUR. Runs only for version tags (v1.2.3) whose
+# commit is on main, and it is the only workflow that reads the AUR key.
+# Tag the release on main, push the tag, and this validates, builds and
+# publishes; nothing else in the repo reaches the AUR.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aur-release
+  cancel-in-progress: false
+
+jobs:
+  aur:
+    name: Validate, build and publish
+    if: github.repository == 'nninkovic95/greetd-qsgreeter' && github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    # Restrict this environment to v* tags (Settings > Environments) and keep
+    # the AUR key there, so no branch workflow can read it.
+    environment: aur
+    timeout-minutes: 30
+    steps:
+      - name: Install tools
+        run: pacman -Syu --noconfirm --needed base-devel git namcap openssh pacman-contrib greetd quickshell
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the tag check needs main's history
+
+      - name: Check the tag
+        id: tag
+        run: |
+          tag=$GITHUB_REF_NAME
+          if ! [[ $tag =~ ^v[0-9]+(\.[0-9]+){0,3}$ ]]; then
+            echo "::error::'$tag' is not a version tag like v1.2.3"
+            exit 1
+          fi
+          commit=$(git rev-parse "$GITHUB_REF^{commit}")
+          if ! git merge-base --is-ancestor "$commit" origin/main; then
+            echo "::error::$tag points at $commit, which is not on main"
+            exit 1
+          fi
+          echo "pkgver=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate PKGBUILD with namcap
+        run: |
+          namcap aur/PKGBUILD | tee namcap-pkgbuild.txt
+          if grep -q ' E: ' namcap-pkgbuild.txt; then
+            echo "::error::namcap reported errors in aur/PKGBUILD"
+            exit 1
+          fi
+
+      - name: Build the package from the tag tarball
+        run: .github/scripts/build-package.sh "${{ steps.tag.outputs.pkgver }}" tag
+
+      - name: Validate the built package with namcap
+        run: |
+          namcap aur-build/*.pkg.tar.zst | tee namcap-package.txt
+          if grep -q ' E: ' namcap-package.txt; then
+            echo "::error::namcap reported errors in the built package"
+            exit 1
+          fi
+
+      - name: Publish to the AUR
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          PKGVER: ${{ steps.tag.outputs.pkgver }}
+          # aur.archlinux.org's Ed25519 host key, as listed on the AUR home page.
+          AUR_HOST_FINGERPRINT: SHA256:RFzBCUItH9LZS0cKB5UE6ceAYhBD5C8GeOBip8Z11+4
+        run: |
+          if [ -z "$AUR_SSH_PRIVATE_KEY" ]; then
+            echo "::error::the AUR_SSH_PRIVATE_KEY secret is not set"
+            exit 1
+          fi
+
+          ssh_dir=$RUNNER_TEMP/aur-ssh
+          install -dm700 "$ssh_dir"
+          trap 'rm -rf "$ssh_dir"' EXIT
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > "$ssh_dir/key"
+          chmod 600 "$ssh_dir/key"
+
+          # Trust the AUR host key only if it matches the pinned fingerprint.
+          ssh-keyscan -t ed25519 aur.archlinux.org > "$ssh_dir/known_hosts" 2>/dev/null
+          fingerprint=$(ssh-keygen -lf "$ssh_dir/known_hosts" | awk '{print $2}')
+          if [ "$fingerprint" != "$AUR_HOST_FINGERPRINT" ]; then
+            echo "::error::AUR host key is $fingerprint, expected $AUR_HOST_FINGERPRINT"
+            exit 1
+          fi
+          export GIT_SSH_COMMAND="ssh -i $ssh_dir/key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$ssh_dir/known_hosts"
+
+          pkgname=$(sed -n 's/^pkgname=//p' aur-build/PKGBUILD)
+          git clone "ssh://aur@aur.archlinux.org/$pkgname.git" aur-repo
+          cp aur-build/PKGBUILD aur-build/.SRCINFO aur-repo/
+          cd aur-repo
+          git add PKGBUILD .SRCINFO
+          if git diff --cached --quiet; then
+            echo "The AUR already has $pkgname $PKGVER; nothing to publish."
+            exit 0
+          fi
+          git -c user.name="$GITHUB_ACTOR" \
+              -c user.email="$GITHUB_ACTOR@users.noreply.github.com" \
+              commit -m "Update to $PKGVER"
+          git push origin HEAD:master
+          echo "Published $pkgname $PKGVER to https://aur.archlinux.org/packages/$pkgname"
