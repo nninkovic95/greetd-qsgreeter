@@ -31,6 +31,9 @@ QtObject {
 	property bool ready: false /**< Users were loaded */
 	property bool error: false /**< Unable to load users */
 
+	/** Per-user workers that have not finished yet */
+	property int _pending: 0
+
 	/** Reload list of available system users */
 	function reload() {
 		root._procListCachedUsers.running = true;
@@ -42,6 +45,19 @@ QtObject {
 		root.busy = false;
 		root.error = true;
 		root.usersChanged();
+	}
+
+	/** A per-user worker finished, publish the list once the last one is done */
+	function _workerDone() {
+		root._pending -= 1;
+		if (root._pending > 0) {
+			return;
+		}
+		if (root.users.length === 0) {
+			root._fail("Unable to retrieve any user from D-Bus");
+		} else {
+			root._finish();
+		}
 	}
 
 	/** Stop loading and publish the users gathered so far */
@@ -87,7 +103,9 @@ QtObject {
 				return;
 			}
 			// Setting the paths starts one worker per user
-			root.paths = Helper.parseUserList(userListOutput.text);
+			const paths = Helper.parseUserList(userListOutput.text);
+			root._pending = paths.length;
+			root.paths = paths;
 			console.log("Listed users: " + root.paths);
 			// Nobody to wait for
 			if (root.paths.length === 0) {
@@ -110,6 +128,9 @@ QtObject {
 
 			required property string modelData
 
+			/* Set once the command has run, a command that cannot start never emits exited */
+			property bool _exited: false
+
 			running: true
 			command: [
 				"gdbus", "call", "--system",
@@ -123,14 +144,19 @@ QtObject {
 			}
 
 			onExited: function(exitCode, exitStatus) {
+				getUser._exited = true;
 				if (exitCode !== 0) {
-					root._fail("Failed to retrieve data for path: " + getUser.modelData);
-					return;
+					console.error("Failed to retrieve data for path: " + getUser.modelData);
+				} else {
+					root.users.push(Helper.parseUserData(userDataOutput.text));
 				}
-				root.users.push(Helper.parseUserData(userDataOutput.text));
-				// Publish the list once every user has been parsed
-				if (root.users.length >= root.paths.length) {
-					root._finish();
+				root._workerDone();
+			}
+
+			onRunningChanged: {
+				if (!getUser.running && !getUser._exited) {
+					console.error("Unable to start gdbus for path: " + getUser.modelData);
+					root._workerDone();
 				}
 			}
 		}
