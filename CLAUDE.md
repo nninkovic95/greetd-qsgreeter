@@ -15,7 +15,11 @@ adds a Hyprland session config alongside the upstream niri one.
 - `aur/PKGBUILD` — release package (`qsgreeter-hyprland`) built from a `v*` tag tarball.
   Its `pkgver` and `sha256sums` are placeholders that the release workflow fills in.
 - `.github/workflows/ci.yml` — every push and PR: qmllint, `make install`/`uninstall` into a
-  scratch root, and a build of `aur/PKGBUILD` from the commit.
+  scratch root, a build of `aur/PKGBUILD` from the commit, and the greeter UI run below.
+- `tests/ui/` — runs the real greeter against stub `Quickshell`, `Quickshell.Io` and
+  `Quickshell.Services.Greetd` modules (`stubs/`) with canned AccountsService and session data
+  (`stubs/Quickshell/Io/fakesystem.js`, `fixtures/`), and drives it through login
+  (`tst_greeter.qml`). Keep the stubs to the API the greeter uses, with Quickshell's semantics.
 - `.github/workflows/release.yml` — `v*` tags on main only: namcap, build from the tag,
   publish to the AUR with the `AUR_SSH_PRIVATE_KEY` secret.
 
@@ -30,6 +34,10 @@ There is no build step. To check one:
   as warnings. Some Quickshell types still will not resolve outside a session; act on real
   syntax and type errors. The duplicate `proc` id in `UserService.qml` is a known false
   positive (the second one is inside a delegate, its own scope).
+- Run the greeter through login: `QT_QPA_PLATFORM=offscreen tests/ui/run.sh` (or without
+  the variable to use Xvfb, as CI does). Screenshots land in `ui-screenshots/`. A failed check
+  means the greeter did not reach a usable state; `HARNESS-WARNING` lines are known problems
+  that do not fail the run yet (no keyboard focus in the password field, PR #7 bug 2).
 
 ## Review rules
 

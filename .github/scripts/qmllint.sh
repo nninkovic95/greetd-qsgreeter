@@ -16,28 +16,7 @@ summary=${GITHUB_STEP_SUMMARY:-/dev/null}
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
-# qs.<Dir> modules: one qmldir per directory, singletons marked as such.
-mkdir -p "$work/imports/qs"
-for dir in "$src"/*/; do
-    compgen -G "$dir*.qml" >/dev/null || continue
-    name=$(basename "$dir")
-    mod="$work/imports/qs/$name"
-    mkdir -p "$mod"
-    echo "module qs.$name" > "$mod/qmldir"
-    for f in "$dir"*.qml "$dir"*.js; do
-        [ -e "$f" ] || continue
-        base=$(basename "$f")
-        ln -s "$(realpath "$f")" "$mod/$base"
-        case $base in
-            *.js) ;;
-            *) if grep -q '^pragma Singleton' "$f"; then
-                   echo "singleton ${base%.qml} 1.0 $base" >> "$mod/qmldir"
-               else
-                   echo "${base%.qml} 1.0 $base" >> "$mod/qmldir"
-               fi ;;
-        esac
-    done
-done
+"$(dirname "$0")/qs-modules.sh" "$src" "$work/imports"
 
 mapfile -d '' files < <(find "$src" -name '*.qml' -print0 | sort -z)
 [ ${#files[@]} -gt 0 ] || { echo "::error::no QML files under $src"; exit 1; }
