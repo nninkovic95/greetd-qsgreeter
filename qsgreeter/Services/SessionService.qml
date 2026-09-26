@@ -40,16 +40,38 @@ QtObject {
 		root._procListSessions.running = true;
 	}
 
+	/** Name of the .desktop file behind a session path */
+	function _fileName(path: string): string {
+		return path.substring(path.lastIndexOf("/") + 1);
+	}
+
+	/** Position of a session file's directory in sessionDirs, lower wins */
+	function _dirRank(path: string): int {
+		return root.sessionDirs.indexOf(path.substring(0, path.lastIndexOf("/")));
+	}
+
 	/** Add a session to the list */
 	function _register(path: string, props: var) {
+		// The same file name in several data directories is one session,
+		// provided by the first directory in XDG_DATA_DIRS like any XDG file
+		const file = root._fileName(path);
+		const twin = root.sessions.findIndex(session => root._fileName(session.path) === file);
+		if (twin !== -1) {
+			if (root._dirRank(root.sessions[twin].path) <= root._dirRank(path)) {
+				console.log("Session shadowed by " + root.sessions[twin].path + ": " + path);
+				return;
+			}
+			root.sessions.splice(twin, 1);
+		}
 		console.log("Session successfully registered: " + props.Name);
 		root.sessions.push({
 			name: Helper.localizedName(props, Qt.locale().name),
 			path: path,
 			props: props
 		});
-		// Files load in any order, keep the default session stable across boots
-		root.sessions.sort((a, b) => a.path.localeCompare(b.path));
+		// Files load in any order, keep the default session stable across
+		// boots: by file name, so a file moving between directories stays put
+		root.sessions.sort((a, b) => root._fileName(a.path).localeCompare(root._fileName(b.path)));
 		root.sessionsChanged();
 	}
 
