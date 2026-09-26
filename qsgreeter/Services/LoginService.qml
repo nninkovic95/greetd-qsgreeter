@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell
 import Quickshell.Services.Greetd
 
 /**
@@ -9,59 +8,97 @@ import Quickshell.Services.Greetd
 QtObject {
 	id: root
 
+	/* State of the current login attempt, reset by clear() */
 	property var _username: undefined
 	property var _password: undefined
 	property var _sessionExec: undefined
+	property var _sessionEnv: undefined
+
+	/** True while greetd is authenticating on our behalf */
+	property bool _active: false
+
+	/** False when the greeter is not running under greetd */
+	readonly property bool available: Greetd.available
+
+	/** Issued when bad password is provided */
+	signal failure()
+
+	/** Greetd issued a message, `error` is true for PAM error messages and greetd errors */
+	signal message(message: string, error: bool)
 
 	/**
 	 * Start a login attempt
 	 *
 	 * @param user {object} (org.freedesktop.Account) user object as key-value pairs
 	 * @param password {string} String with password to use
-	 * @param session {object} Session .desktop file as key-value pairs
+	 * @param session {object} Session entry: name, path and props (the .desktop file as key-value pairs)
 	 */
 	function login(user: var, password: string, session: var) {
-		// Set internal variables
 		root._username = user.UserName;
 		root._password = password;
-		root._sessionExec = session.Exec;
-		// Create greetd session
+		root._sessionExec = session.props.Exec;
+		root._sessionEnv = root.sessionEnvironment(session);
+		root._active = true;
 		Greetd.createSession(root._username);
 	}
 
-	/** Clear internal state */
+	/**
+	 * Environment for the launched session, as other greeters set it:
+	 * the session type, the desktop names from the .desktop file and
+	 * the file's own name. greetd itself only sets the seat and VT.
+	 */
+	function sessionEnvironment(session: var): var {
+		const env = ["XDG_SESSION_TYPE=wayland"];
+		const desktops = session.props.DesktopNames;
+		if (desktops) {
+			env.push("XDG_CURRENT_DESKTOP=" + desktops.replace(/;+$/, "").split(";").join(":"));
+		}
+		const file = session.path.split("/").pop().replace(/\.desktop$/, "");
+		if (file) {
+			env.push("XDG_SESSION_DESKTOP=" + file);
+		}
+		return env;
+	}
+
+	/** Clear internal state and cancel the greetd session */
 	function clear() {
-		// Set internal state
+		root._active = false;
 		root._username = undefined;
 		root._password = undefined;
 		root._sessionExec = undefined;
-		// Cancel session
+		root._sessionEnv = undefined;
 		Greetd.cancelSession();
 	}
 
-	/** Issued when bad password is provided */
-	signal failure()
-
-	/** Greetd issued a message */
-	signal message(message: string)
-
 	/* Handle Greetd events */
 	property Connections _greetdConnection: Connections {
-		id: conn
 		target: Greetd
 
 		function onAuthMessage(message, error, responseRequired, echoResponse) {
-			// Handle generic messages
-			if (!error && !responseRequired && echoResponse) {
-				root.message(message);
-				root.clear();
-			}
-
-			// Handle prompts: secret (echoResponse false) gets the stored password,
-			// visible (echoResponse true) gets an empty string
-			else if (responseRequired) {
+			if (responseRequired) {
+				// Answer prompts by kind, never by prompt text: secret prompts
+				// (echoResponse false) get the stored password, visible ones
+				// get an empty string
 				Greetd.respond(echoResponse ? "" : root._password);
+			} else {
+				// Info or error message: show it, the conversation continues
+				// (an error is normally followed by an auth failure)
+				root.message(message, error);
 			}
+		}
+
+		function onError(error) {
+			// With no session left this is greetd's reply to the cancel sent
+			// after a failed attempt: its PAM worker has already exited, so
+			// the cancel could not be delivered. The failure has been shown
+			if (Greetd.state === GreetdState.Inactive) {
+				return;
+			}
+			// greetd refused a request (for example the session failed to
+			// start); quickshell drops the session right after this
+			console.error("greetd error: " + error);
+			root.clear();
+			root.message(error, true);
 		}
 
 		function onAuthFailure(_) {
@@ -72,7 +109,23 @@ QtObject {
 
 		function onReadyToLaunch() {
 			console.log("Launching session " + root._sessionExec);
-			Greetd.launch([root._sessionExec]);
+			// From here the session belongs to greetd, never cancel it
+			root._active = false;
+			Greetd.launch([root._sessionExec], root._sessionEnv);
+			// greetd has the password, drop our copy
+			root._password = undefined;
+		}
+	}
+
+	/*
+	 * This service dies with the login page. If greetd is still
+	 * authenticating, cancel: a success arriving afterwards would leave
+	 * greetd in ReadyToLaunch with nobody to launch the session, and
+	 * every later attempt would be ignored.
+	 */
+	Component.onDestruction: {
+		if (root._active) {
+			root.clear();
 		}
 	}
 }

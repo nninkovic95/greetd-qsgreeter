@@ -2,11 +2,10 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
 
 import qs.Config
 
-import "locale.js" as Locale
+import "locale.js" as LocaleHelper
 
 /**
  * L10n.qml
@@ -15,21 +14,25 @@ import "locale.js" as Locale
 Singleton {
 	id: l10n
 
-	property string dateMessage: "<l10n.dateMessage>"
-	property string dateFormat: "<l10n.dateFormat>"
-	property string dialogConfirmAction: "<l10n.dialogConfirmAction>"
-	property string dialogAccept: "<l10n.dialogAccept>"
-	property string dialogCancel: "<l10n.dialogCancel>"
-	property string dialogShutdown: "<l10n.dialogShutdown>"
-	property string dialogReboot: "<l10n.dialogReboot>"
-	property string userListError: "<l10n.userListError>"
-	property string userWelcome: "<l10n.userWelcome(%1)>"
-	property string userPrompt: "<l10n.userPrompt(%1)>"
-	property string passwordPlaceholder: "<l10n.passwordPlaceholder>"
-	property string passwordError: "<l10n.passwordError>"
+	/* Defaults are English, a translation file overrides the keys it has */
+	property string dateMessage: "Today is"
+	property string dateFormat: "yyyy-MM-dd"
+	property string dialogConfirmAction: "Confirm action"
+	property string dialogAccept: "Accept"
+	property string dialogCancel: "Cancel"
+	property string dialogShutdown: "Are you sure you want to shutdown?"
+	property string dialogReboot: "Are you sure you want to reboot?"
+	property string userListError: "Unable to retrieve users from D-Bus"
+	property string userListEmpty: "No user accounts found"
+	property string userWelcome: "Welcome back, %1"
+	property string userPrompt: "Login for %1"
+	property string passwordPlaceholder: "Password"
+	property string passwordError: "Wrong password"
+	property string sessionListError: "No Wayland sessions found"
+	property string greetdUnavailable: "greetd is not available"
 
 	ConfigLoader {
 		target: l10n
-		src: Quickshell.shellDir + "/" + Locale.getLocalePath()
+		src: Quickshell.shellDir + "/" + LocaleHelper.getLocalePath()
 	}
 }

@@ -1,7 +1,8 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import Quickshell
 
 import qs.Theme
 import qs.Services
@@ -15,38 +16,42 @@ import qs.L10n
 Item {
 	id: root
 
+	/** User was selected, pass user object as param */
+	signal selected(user: var)
+
 	UserService {
 		id: userService
 	}
-
-	/** User was selected, pass user object as param */
-	signal selected(user: var)
 
 	states: [
 		State {
 			name: "busy"
 			when: userService.busy
 			PropertyChanges {
-				target: busyComponent
-				opacity: 1
+				busyComponent.opacity: 1
 			}
 		},
 		State {
 			name: "error"
 			when: !userService.busy && userService.error
 			PropertyChanges {
-				target: errorComponent
-				opacity: 1
+				errorComponent.opacity: 1
+			}
+		},
+		State {
+			name: "empty"
+			when: !userService.busy && !userService.error && userService.ready && userService.users.length === 0
+			PropertyChanges {
+				emptyComponent.opacity: 1
 			}
 		},
 		State {
 			name: "ready"
-			when: !userService.busy && !userService.error && userService.ready
+			when: !userService.busy && !userService.error && userService.ready && userService.users.length > 0
 			PropertyChanges {
-				target: usersComponent
-				opacity: 1
+				usersComponent.opacity: 1
 			}
-		},
+		}
 	]
 
 	transitions: Transition {
@@ -61,9 +66,11 @@ Item {
 	BusyIndicator {
 		id: busyComponent
 		anchors.centerIn: parent
-		Layout.preferredWidth: Theme.style.accountSize
-		Layout.preferredHeight: Theme.style.accountSize
+		width: Theme.style.accountSize
+		height: Theme.style.accountSize
 		opacity: 0
+		// Stop animating once faded out, an invisible spinner still redraws every frame
+		running: opacity > 0
 	}
 
 	/* Error message */
@@ -72,7 +79,14 @@ Item {
 		anchors.centerIn: parent
 		opacity: 0
 		text: L10n.userListError
-		padding: 40
+	}
+
+	/* No accounts message */
+	Placeholder {
+		id: emptyComponent
+		anchors.centerIn: parent
+		opacity: 0
+		text: L10n.userListEmpty
 	}
 
 	/* Actual list of users */
@@ -83,14 +97,12 @@ Item {
 		opacity: 0
 
 		Repeater {
-			id: repeater
 			model: userService.users
 			delegate: UserButton {
-
 				required property int index
 				required property var modelData
 
-				realName: modelData.RealName
+				realName: modelData.DisplayName
 				iconPath: modelData.IconFile
 
 				Layout.preferredWidth: Theme.style.accountSize
@@ -98,16 +110,13 @@ Item {
 
 				onClicked: root.selected(modelData)
 
-				// Default enter action
-				Keys.onPressed: (event) => {
-					if (event.key === Qt.Key_Return) {
-						root.selected(modelData);
-						event.accepted = true;
-					}
-				}
+				// Default enter action, Return and the keypad's Enter
+				Keys.onReturnPressed: root.selected(modelData)
+				Keys.onEnterPressed: root.selected(modelData)
 
+				// Focus the first user so Enter selects it
 				Component.onCompleted: {
-					if (index == 0) {
+					if (index === 0) {
 						forceActiveFocus();
 					}
 				}

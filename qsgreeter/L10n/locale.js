@@ -5,13 +5,13 @@
 function getLocalePath() {
 	console.log("Current locale is: " + Qt.locale().name);
 
-    let lang = Qt.locale().name.substring(0, 2);
-    const supported = ["en", "es"];
+	const lang = Qt.locale().name.substring(0, 2);
+	const supported = ["en", "es"];
 
-    if (supported.indexOf(lang) !== -1) {
-        return "L10n/" + lang + ".json";
-    }
+	if (supported.indexOf(lang) !== -1) {
+		return "L10n/" + lang + ".json";
+	}
 
 	// Fallback language
-    return "L10n/en.json";
+	return "L10n/en.json";
 }

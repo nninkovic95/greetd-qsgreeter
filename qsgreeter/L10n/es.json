@@ -1,4 +1,17 @@
 {
 	"dateMessage": "Hoy es",
-	"dateFormat": "dd/MM/yyyy"
+	"dateFormat": "dd/MM/yyyy",
+	"dialogConfirmAction": "Confirmar acción",
+	"dialogAccept": "Aceptar",
+	"dialogCancel": "Cancelar",
+	"dialogShutdown": "¿Seguro que quieres apagar?",
+	"dialogReboot": "¿Seguro que quieres reiniciar?",
+	"userListError": "No se pudieron obtener los usuarios de D-Bus",
+	"userListEmpty": "No se encontraron cuentas de usuario",
+	"userWelcome": "Bienvenido de nuevo, %1",
+	"userPrompt": "Iniciar sesión como %1",
+	"passwordPlaceholder": "Contraseña",
+	"passwordError": "Contraseña incorrecta",
+	"sessionListError": "No se encontraron sesiones de Wayland",
+	"greetdUnavailable": "greetd no está disponible"
 }

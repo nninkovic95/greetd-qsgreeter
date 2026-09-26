@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Effects
 
 import qs.Theme
@@ -17,17 +16,20 @@ Item {
 	/** Path to icon to display, if null or invalid show user initials instead */
 	required property string iconPath
 
-	/** When this is false, all actions are disabled, button acts just as an image placeholder */
-	property bool enabled: true
-
-	/** Signal for button click */
-	signal clicked
+	/** When false the button ignores input and hides the name, acting as a picture only */
+	property bool interactive: true
 
 	/** Default colors when no `iconPath` is provided */
 	property ButtonColors theme: ButtonColors {}
 
+	/** Signal for button click */
+	signal clicked
+
 	implicitWidth: Theme.style.accountSize
 	implicitHeight: Theme.style.accountSize
+
+	// Tab moves between users, Return or Enter picks the focused one
+	activeFocusOnTab: root.interactive
 
 	/* Children */
 	Rectangle {
@@ -39,33 +41,38 @@ Item {
 		/* Profile Image Fallback */
 		Text {
 			id: iconText
-			text: (root.realName != "") ? root.realName[0] : ""
+			text: (root.realName !== "") ? root.realName[0] : ""
+			textFormat: Text.PlainText
 			anchors.centerIn: parent
 			color: root.theme.foreground.inactive
 			font.family: Theme.style.fontFamilyParagraph
 			font.pixelSize: (Math.min(parent.width, parent.height) / 2)
-			visible: (face.status == Image.Error) || (face.status == Image.Null)
+			visible: (face.status === Image.Error) || (face.status === Image.Null)
 		}
 
-		/* Profile Image */
+		/* Profile Image, clipped to a circle by `mask` */
 		Rectangle {
 			id: mask
 			anchors.fill: parent
-			width: height * 2
 			radius: (width / 2)
 			visible: false
 		}
 
 		Image {
 			id: face
-			source: iconPath
+			anchors.fill: parent
+			source: root.iconPath
+			// Cover the circle and decode at no more than twice its size
+			fillMode: Image.PreserveAspectCrop
+			sourceSize.width: Math.round(parent.width * 2)
+			sourceSize.height: Math.round(parent.height * 2)
 			asynchronous: true
 			visible: false
 		}
 
 		MultiEffect {
-			id: iconFace
 			anchors.fill: parent
+			// The rendered (cropped) item, not the raw image texture
 			source: ShaderEffectSource {
 				sourceItem: face
 			}
@@ -77,6 +84,15 @@ Item {
 			maskSource: ShaderEffectSource {
 				sourceItem: mask
 			}
+		}
+
+		/* Keyboard focus ring, above the picture */
+		Rectangle {
+			anchors.fill: parent
+			radius: (width / 2)
+			color: "transparent"
+			border.width: root.activeFocus ? Theme.style.borderWidth : 0
+			border.color: Theme.colors.primary
 		}
 
 		/* Animations */
@@ -96,13 +112,14 @@ Item {
 
 	Text {
 		id: username
-		visible: root.enabled
+		visible: root.interactive
 		anchors {
 			top: account.bottom
 			horizontalCenter: root.horizontalCenter
 			topMargin: Theme.style.fontSizeParagraph + (account.height * (account.scale - 1)) / 2
 		}
 		text: root.realName
+		textFormat: Text.PlainText
 		color: root.theme.foreground.inactive
 		font.family: Theme.style.fontFamilyParagraph
 		font.pixelSize: Theme.style.fontSizeParagraph
@@ -111,55 +128,35 @@ Item {
 	/* Handle Mouse Events */
 	HoverHandler {
 		id: hover
-		enabled: root.enabled
+		enabled: root.interactive
 	}
 
 	TapHandler {
 		id: tap
+		enabled: root.interactive
 		onTapped: root.clicked()
-		enabled: root.enabled
 	}
 
-	/* States based on mouse movement */
+	/* States based on mouse movement, the base state is the resting look */
 	states: [
-		State {
-			name: "inactive"
-			when: !hover.hovered && !tap.pressed
-
-			PropertyChanges {
-				target: account
-				scale: 1.0
-			}
-		},
 		State {
 			name: "hover"
 			when: hover.hovered && !tap.pressed
 
 			PropertyChanges {
-				target: account
-				color: root.theme.background.hover
-				scale: (1 + Theme.style.animationBounce)
-			}
-
-			PropertyChanges {
-				target: iconText
-				color: root.theme.foreground.hover
+				account.color: root.theme.background.hover
+				account.scale: (1 + Theme.style.animationBounce)
+				iconText.color: root.theme.foreground.hover
 			}
 		},
 		State {
 			name: "pressed"
-			when: hover.hovered && tap.pressed
+			when: tap.pressed
 
 			PropertyChanges {
-				target: account
-				color: root.theme.background.hover
-				scale: 1.0
+				account.color: root.theme.background.pressed
+				account.scale: 1.0
 			}
-
-			PropertyChanges {
-				target: account
-				color: root.theme.background.pressed
-			}
-		},
+		}
 	]
 }

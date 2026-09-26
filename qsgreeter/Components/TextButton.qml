@@ -4,8 +4,8 @@ import QtQuick.Controls
 import qs.Theme
 
 /**
- * IconButton.qml
- * Round button to trigger an action, i.e PowerOff, Back, etc.
+ * TextButton.qml
+ * Pill-shaped button with a text label, i.e dialog Accept/Cancel
  */
 CustomButton {
 	padding: (Theme.style.buttonSize / 4)

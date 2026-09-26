@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell
 import Quickshell.Io
 
 import "config.js" as Config
@@ -18,15 +17,15 @@ FileView {
 	property QtObject target
 
 	/** On object initialization finish */
-	signal finished;
+	signal finished()
 
 	preload: true
 	blockLoading: true
 	watchChanges: true
 
-	onFileChanged: reload()
+	onFileChanged: root.reload()
 	onLoaded: {
-		Config.apply(text(), target);
+		Config.apply(root.text(), root.target);
 		root.finished();
 	}
 }

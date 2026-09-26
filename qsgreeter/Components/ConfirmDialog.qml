@@ -15,6 +15,9 @@ Dialog {
 	/** Message to show */
 	required property string message
 
+	/** Item that had keyboard focus before the dialog opened, focus returns to it on close */
+	property Item _focusBefore: null
+
 	anchors.centerIn: parent
 	modal: true
 
@@ -27,16 +30,30 @@ Dialog {
 		border.color: Theme.colors.primary
 	}
 
+	enter: PopupEnterTransition {}
+	exit: PopupExitTransition {}
+
+	onAboutToShow: {
+		const window = root.parent ? root.parent.Window.window : null;
+		root._focusBefore = window ? window.activeFocusItem : null;
+	}
+
+	// Qt 6.6 leaves focus on the overlay after a modal popup closes
+	onClosed: {
+		if (root._focusBefore) {
+			root._focusBefore.forceActiveFocus();
+		}
+	}
+
 	Column {
 		anchors.fill: parent
 		spacing: Theme.style.buttonSpacing
 
 		/* Header Text */
-		Rectangle {
+		Item {
 			width: parent.width
 			height: Theme.style.fontSizeParagraph
 
-			color: "transparent"
 			Text {
 				anchors.centerIn: parent
 				text: L10n.dialogConfirmAction
@@ -54,13 +71,13 @@ Dialog {
 			font.pixelSize: Theme.style.fontSizeParagraph
 		}
 
-		/* Buttons */
-		Rectangle {
+		/* Buttons, full width so the row stays centered */
+		Item {
 			width: parent.width
-			height: childrenRect.height
+			height: buttonRow.height
 
-			color: "transparent"
 			Row {
+				id: buttonRow
 				anchors.centerIn: parent
 				spacing: Theme.style.buttonSpacing
 
@@ -80,7 +97,4 @@ Dialog {
 			}
 		}
 	}
-
-	enter: PopupEnterTransition {}
-	exit: PopupExitTransition {}
 }

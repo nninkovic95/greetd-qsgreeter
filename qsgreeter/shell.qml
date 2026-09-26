@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import QtQuick.Layouts
 
 import qs.Theme
 import qs.L10n
@@ -9,33 +8,28 @@ import qs.Services as Services
 import qs.Components as Components
 
 FloatingWindow {
+	id: root
+
+	/** Service for triggering poweroff/reboot */
+	property Services.PowerService powerService: Services.PowerService {}
 
 	title: "qsgreeter"
 	color: "transparent"
 
 	minimumSize: "600x400"
 
-	/** Service for triggering poweroff/reboot */
-	property Services.PowerService powerService: Services.PowerService {}
-
 	/* Poweroff confirmation dialog */
 	Components.ConfirmDialog {
 		id: shutdownConfirm
 		message: L10n.dialogShutdown
-
-		onAccepted: {
-			powerService.shutdown()
-		}
+		onAccepted: root.powerService.shutdown()
 	}
 
 	/* Reboot confirmation dialog */
 	Components.ConfirmDialog {
 		id: rebootConfirm
 		message: L10n.dialogReboot
-
-		onAccepted: {
-			powerService.reboot()
-		}
+		onAccepted: root.powerService.reboot()
 	}
 
 	Rectangle {
@@ -54,18 +48,14 @@ FloatingWindow {
 				topMargin: Theme.style.borderMargin
 				horizontalCenter: parent.horizontalCenter
 			}
+			/* Show either the date or a welcome message */
+			message: users.user ? L10n.userWelcome.arg(users.user.DisplayName) : ""
 		}
 
 		/* User list and login prompt */
 		Components.UserSelection {
 			id: users
 			anchors.centerIn: parent
-			/* Show either the date or a welcome message */
-			onUserChanged: {
-				clock.message = (users.user != undefined)
-					? L10n.userWelcome.arg(users.user.RealName)
-					: "";
-			}
 		}
 
 		/* Power buttons */
@@ -90,18 +80,13 @@ FloatingWindow {
 					foreground.pressed: Theme.colors.error
 				}
 
-				onClicked: {
-					shutdownConfirm.open()
-				}
+				onClicked: shutdownConfirm.open()
 			}
 
 			/* Reboot button */
 			Components.IconButton {
 				source: Qt.resolvedUrl("Assets/reboot.svg")
-
-				onClicked: {
-					rebootConfirm.open()
-				}
+				onClicked: rebootConfirm.open()
 			}
 		}
 	}

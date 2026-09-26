@@ -13,67 +13,77 @@ import qs.Services
 ColumnLayout {
 	id: root
 
-	/* User to show */
+	/** User to show */
 	required property var user
 
-	/** When user cancels operation (back button) */
-	signal cancel
+	/** Currently selected session, follows the picker and the list behind it */
+	property var session: root.sessionService.sessions[sessionInput.currentIndex]
 
-	/** Function to get password prompt with username colored */
-	function getUserPrompt(username) {
-		const font = `<font color="${Theme.colors.primary}">${username}</font>`;
-		return L10n.userPrompt.arg(font);
-	}
-
-	/** Currently selected session */
-	property var session: undefined
-
-	/** Message to show instead of name */
+	/** Message to show above the prompt */
 	property string message: ""
+
+	/** The message is an error, keep it over the wrong-password text and show it in red */
+	property bool messageError: false
 
 	/** Wrong password animation */
 	property bool badPassword: false
 
 	/** Service for triggering login */
 	property LoginService loginService: LoginService {
-		onMessage: function(message) {
+		onMessage: function(message, error) {
 			root.message = message;
+			root.messageError = error;
 		}
 
 		onFailure: {
-			root.badPassword = true
+			root.badPassword = true;
+			passwordInput.clear();
+			// Keep whatever PAM said during the attempt: a lockout notice is an
+			// informational message, and it explains why the password was refused
 		}
-	}
-
-	/**
-	 * Make a login attempt
-	 *
-	 * @param user {Object} org.freedesktop.Accounts.User -like object
-	 * @param user.UserName {string} Linux user
-	 * @param password {string} Password input text
-	 * @param session {Object} .desktop file properties as key-value pairs
-	 */
-	function tryLogin(user: var, password: string, session: var) {
-		loginService.login(user, password, session)
 	}
 
 	/** List Wayland sessions */
-	property SessionService sessionService: SessionService {
-		Component.onDestruction: {
-			session = undefined;
+	property SessionService sessionService: SessionService {}
+
+	/** When user cancels operation (back button) */
+	signal cancel
+
+	/** Function to get password prompt with username colored */
+	function getUserPrompt(username) {
+		// The prompt is styled text, keep the name literal
+		const escaped = username.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+		const font = `<font color="${Theme.colors.primary}">${escaped}</font>`;
+		return L10n.userPrompt.arg(font);
+	}
+
+	/** Make a login attempt with the typed password and the selected session */
+	function submit() {
+		root.message = "";
+		root.messageError = false;
+		if (!root.session) {
+			root.message = L10n.sessionListError;
+			root.messageError = true;
+			return;
 		}
+		if (!root.loginService.available) {
+			root.message = L10n.greetdUnavailable;
+			root.messageError = true;
+			return;
+		}
+		root.loginService.login(root.user, passwordInput.text, root.session);
 	}
 
 	/** Message text */
 	Text {
-		text: (root.badPassword)
-			? L10n.passwordError
-			: (root.message != undefined && root.message != "") ? root.message : ""
-		visible: root.badPassword || root.message != undefined && root.message != ""
+		text: (root.message !== "") ? root.message : (root.badPassword ? L10n.passwordError : "")
+		textFormat: Text.PlainText
+		// Always laid out, so showing a message does not move the prompt
+		opacity: (root.badPassword || root.message !== "") ? 1 : 0
 		Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
 		Layout.bottomMargin: Theme.style.accountSpacing
 
-		color: Theme.colors.error
+		color: (root.badPassword || root.messageError) ? Theme.colors.error : Theme.colors.surfaceContrast
 		font.family: Theme.style.fontFamilyParagraph
 		font.pixelSize: Theme.style.fontSizeParagraph
 	}
@@ -85,29 +95,28 @@ ColumnLayout {
 		/* Go Back Button */
 		IconButton {
 			source: Qt.resolvedUrl("../Assets/back.svg")
-			onClicked: {
-				root.cancel();
-			}
+			onClicked: root.cancel()
 		}
 
 		/* User Face Icon */
 		UserButton {
-			realName: (user != null) ? user.RealName : ""
-			iconPath: (user != null) ? user.IconFile : ""
-			enabled: false
+			realName: root.user ? root.user.DisplayName : ""
+			iconPath: root.user ? root.user.IconFile : ""
+			interactive: false
 
 			Layout.preferredWidth: Theme.style.accountSize
 			Layout.preferredHeight: Theme.style.accountSize
 		}
 
-		/* Prompt */
+		/* Prompt, promptSize wide unless its label needs more room (whole pixels, like an implicit size) */
 		Column {
-			width: Theme.style.promptSize
+			Layout.preferredWidth: Math.max(Theme.style.promptSize, Math.ceil(prompt.implicitWidth))
 			spacing: Theme.style.promptSpacing
 
 			Text {
+				id: prompt
 				textFormat: Text.StyledText
-				text: (user != null) ? root.getUserPrompt(user.UserName) : ""
+				text: root.user ? root.getUserPrompt(root.user.UserName) : ""
 				color: Theme.colors.surfaceContrast
 				font.family: Theme.style.fontFamilyParagraph
 				font.pixelSize: Theme.style.fontSizeParagraph
@@ -130,7 +139,7 @@ ColumnLayout {
 					color: root.badPassword ? Theme.colors.error : Theme.colors.primary
 
 					background: InputBackground {
-						selected: parent.activeFocus
+						selected: passwordInput.activeFocus
 						border.color: root.badPassword
 							? Theme.colors.error
 							: (passwordInput.activeFocus ? Theme.colors.primary : Theme.colors.surfaceInactive)
@@ -146,18 +155,11 @@ ColumnLayout {
 						}
 					}
 
-					Keys.onPressed: (event) => {
-						if (event.key === Qt.Key_Return) {
-							// Get properties
-							const user = root.user;
-							const password = passwordInput.text;
-							const session = root.session.props;
-
-							// Start login attempt
-							root.tryLogin(user, password, session);
-							event.accepted = true;
-						}
+					onTextEdited: {
+						root.badPassword = false;
 					}
+
+					onAccepted: root.submit()
 
 					Component.onCompleted: {
 						forceActiveFocus();
@@ -181,31 +183,18 @@ ColumnLayout {
 					Layout.maximumHeight: passwordInput.height
 					radius: Theme.style.promptInputRadius
 					source: Qt.resolvedUrl("../Assets/next.svg")
-					onClicked: {
-						// Get properties
-						const user = root.user;
-						const password = passwordInput.text;
-						const session = root.session.props;
-
-						// Start login attempt
-						root.tryLogin(user, password, session);
-					}
+					onClicked: root.submit()
 				}
 			}
 
 			/* Session picker */
 			SessionPicker {
 				id: sessionInput
-
-				// `sessions` is an object, use property "name" for display
-				model: sessionService.sessions
-				textRole: "name"
-
 				width: parent.width
 
-				onCurrentIndexChanged: {
-					root.session = model[currentIndex];
-				}
+				// Each session is an object, show its "name"
+				model: root.sessionService.sessions
+				textRole: "name"
 			}
 		}
 	}

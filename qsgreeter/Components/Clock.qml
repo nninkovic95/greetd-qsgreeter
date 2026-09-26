@@ -14,10 +14,10 @@ Column {
 	/** Clock color */
 	property alias color: clock.color
 
-	/** Custom message to show above clock, if undefined or empty show date */
+	/** Custom message to show above clock, if empty show date */
 	property string message: ""
 
-	/** Get curernt Date */
+	/** Get current Date */
 	function getDate() {
 		return L10n.dateMessage + " " + Qt.formatDateTime(sys.date, L10n.dateFormat);
 	}
@@ -34,7 +34,8 @@ Column {
 
 	Text {
 		id: label
-		text: (root.message == undefined || root.message == "") ? getDate() : root.message
+		text: (root.message !== "") ? root.message : root.getDate()
+		textFormat: Text.PlainText
 		anchors.horizontalCenter: parent.horizontalCenter
 		color: Theme.colors.surfaceContrast
 		font.pixelSize: Theme.style.fontSizeParagraph
@@ -43,7 +44,7 @@ Column {
 
 	Text {
 		id: clock
-		text: getTime()
+		text: root.getTime()
 		anchors.horizontalCenter: parent.horizontalCenter
 		color: Theme.colors.primary
 		font.pixelSize: Theme.style.fontSizeHeading

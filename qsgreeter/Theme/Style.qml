@@ -32,7 +32,7 @@ QtObject {
 	// Outer window border (applies to dialogs and comboboxes)
 	property int borderWidth: 2
 
-	// Outer window border radius (applies to dialogs and comboboxes
+	// Outer window border radius (applies to dialogs and comboboxes)
 	property int borderRadius: 10
 
 	// Space between elements and border
@@ -61,6 +61,9 @@ QtObject {
 
 	// Password/Session prompt dialog border radius
 	property int promptInputRadius: 10
+
+	// Password/Session prompt border width
+	property int promptInputBorderWidth: 1
 	
 	// Element scale grow and shrink on hover/click
 	property real animationBounce: 0.2
@@ -71,19 +74,31 @@ QtObject {
 	// Duration for large animations
 	property int animationSpeedLarge: 300
 
-	/** Apply scale to every numeric field */
+	/* Values behind the last applyScale(), raw and as written, keyed by property */
+	property var _raw: ({})
+	property var _scaled: ({})
+
+	/**
+	 * Apply scale to every numeric field (except scale itself and the
+	 * animation timings). Safe to call again after a reload: a property
+	 * still holding the value written last time is scaled from its
+	 * remembered raw value rather than compounded.
+	 *
+	 * The fields are pixel sizes, so the result is rounded to whole pixels
+	 * (an int property would otherwise truncate 2 * 0.4 to 0) and a size
+	 * that was set never scales away completely: a 1 px border stays drawn.
+	 */
 	function applyScale() {
 		const scale = root.scale;
 		for (const prop in root) {
 			const value = root[prop];
-			// Only numeric values
-			if (typeof value === "number") {
-				// Ignore animations
-				if (prop.includes("animation")) {
-					continue;
-				}
-				root[prop] = value * scale;
+			if (typeof value !== "number" || prop === "scale" || prop.includes("animation")) {
+				continue;
 			}
+			const raw = (prop in root._scaled && root._scaled[prop] === value) ? root._raw[prop] : value;
+			root._raw[prop] = raw;
+			root[prop] = (raw > 0) ? Math.max(1, Math.round(raw * scale)) : Math.round(raw * scale);
+			root._scaled[prop] = root[prop];
 		}
 	}
 }

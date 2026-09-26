@@ -1,15 +1,16 @@
 # qsgreeter
 
 A QuickShell (QML) login greeter for greetd. Fork of `taleroangel/greetd-qsgreeter`; this fork
-adds a Hyprland session config alongside the upstream niri one.
+replaces the upstream niri config with a Hyprland one.
 
 ## Layout
 
 - `qsgreeter/` — the QuickShell config, installed to `/etc/xdg/quickshell/qsgreeter`.
-  `shell.qml` is the entry point. `Services/` talks to greetd, logind and the user/session lists;
+  `shell.qml` is the entry point. `Services/` talks to greetd, reads users from AccountsService
+  through gdbus, lists the session files and runs systemctl for the power buttons;
   `Components/` is UI; `Theme/` reads `colorscheme.json` and `style.json`; `L10n/` holds the
   translations (`en.json`, `es.json`).
-- `niri/`, `hyprland/` — compositor configs that launch the greeter, installed to `/etc/greetd/`.
+- `hyprland/` — the compositor config that launches the greeter, installed to `/etc/greetd/`.
 - `Makefile` — `install` / `uninstall`, honours `DESTDIR` and `PREFIX`.
 - `PKGBUILD` — Arch `-git` package that runs `make install`.
 - `aur/PKGBUILD` — release package (`qsgreeter-hyprland`) built from a `v*` tag tarball.
@@ -32,12 +33,11 @@ There is no build step. To check one:
 - Lint the QML: `.github/scripts/qmllint.sh`. It builds the `qs.*` module tree Quickshell
   creates at runtime so those imports resolve, fails on syntax errors, and reports the rest
   as warnings. Some Quickshell types still will not resolve outside a session; act on real
-  syntax and type errors. The duplicate `proc` id in `UserService.qml` is a known false
-  positive (the second one is inside a delegate, its own scope).
+  syntax and type errors.
 - Run the greeter through login: `QT_QPA_PLATFORM=offscreen tests/ui/run.sh` (or without
   the variable to use Xvfb, as CI does). Screenshots land in `ui-screenshots/`. A failed check
   means the greeter did not reach a usable state; `HARNESS-WARNING` lines are known problems
-  that do not fail the run yet (no keyboard focus in the password field, PR #7 bug 2).
+  that do not fail the run.
 
 ## Review rules
 
@@ -63,7 +63,7 @@ Do not comment on formatting or style alone.
 
 ## Making changes
 
-- Keep changes small and in the style of the surrounding QML (4-space indent, `id` first,
+- Keep changes small and in the style of the surrounding QML (tabs for indentation, `id` first,
   properties before signal handlers before children).
 - Commit messages: imperative summary line, body explaining why.
 - Do not bump `pkgver` by hand; `pkgver()` computes it.
