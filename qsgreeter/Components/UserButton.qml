@@ -46,6 +46,7 @@ Item {
 		Text {
 			id: iconText
 			text: (root.realName !== "") ? root.realName[0] : ""
+			textFormat: Text.PlainText
 			anchors.centerIn: parent
 			color: root.theme.foreground.inactive
 			font.family: Theme.style.fontFamilyParagraph
@@ -113,6 +114,7 @@ Item {
 			topMargin: Theme.style.fontSizeParagraph + (account.height * (account.scale - 1)) / 2
 		}
 		text: root.realName
+		textFormat: Text.PlainText
 		color: root.theme.foreground.inactive
 		font.family: Theme.style.fontFamilyParagraph
 		font.pixelSize: Theme.style.fontSizeParagraph

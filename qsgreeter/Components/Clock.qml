@@ -35,6 +35,7 @@ Column {
 	Text {
 		id: label
 		text: (root.message !== "") ? root.message : root.getDate()
+		textFormat: Text.PlainText
 		anchors.horizontalCenter: parent.horizontalCenter
 		color: Theme.colors.surfaceContrast
 		font.pixelSize: Theme.style.fontSizeParagraph

@@ -53,7 +53,9 @@ ColumnLayout {
 
 	/** Function to get password prompt with username colored */
 	function getUserPrompt(username) {
-		const font = `<font color="${Theme.colors.primary}">${username}</font>`;
+		// The prompt is styled text, keep the name literal
+		const escaped = username.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+		const font = `<font color="${Theme.colors.primary}">${escaped}</font>`;
 		return L10n.userPrompt.arg(font);
 	}
 
@@ -77,6 +79,7 @@ ColumnLayout {
 	/** Message text */
 	Text {
 		text: (root.message !== "") ? root.message : (root.badPassword ? L10n.passwordError : "")
+		textFormat: Text.PlainText
 		visible: root.badPassword || root.message !== ""
 		Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
 		Layout.bottomMargin: Theme.style.accountSpacing
