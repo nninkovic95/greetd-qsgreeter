@@ -47,7 +47,7 @@ QtObject {
 	 * the session type, the desktop names from the .desktop file and
 	 * the file's own name. greetd itself only sets the seat and VT.
 	 */
-	function sessionEnvironment(session: var) {
+	function sessionEnvironment(session: var): var {
 		const env = ["XDG_SESSION_TYPE=wayland"];
 		const desktops = session.props.DesktopNames;
 		if (desktops) {
