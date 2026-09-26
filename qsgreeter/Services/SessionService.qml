@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell
 import Quickshell.Io
 
 import "session_service_helper.js" as Helper
@@ -25,20 +26,39 @@ QtObject {
 	/** Paths of the Wayland session .desktop files */
 	property var paths: []
 
-	/** Directory scanned for Wayland session files */
-	readonly property string sessionsDir: "/usr/share/wayland-sessions/"
+	/**
+	 * Directories scanned for Wayland session files: the wayland-sessions
+	 * directory of every entry in XDG_DATA_DIRS (or its default value)
+	 */
+	readonly property var sessionDirs: {
+		const dataDirs = Quickshell.env("XDG_DATA_DIRS") || "/usr/local/share:/usr/share";
+		return dataDirs.split(":").filter(dir => dir !== "").map(dir => dir.replace(/\/+$/, "") + "/wayland-sessions");
+	}
 
 	/** Reload list of available Wayland sessions */
 	function reload() {
 		root._procListSessions.running = true;
 	}
 
-	/** Process to list the session files */
+	/** Add a session to the list */
+	function _register(path: string, props: var) {
+		console.log("Session successfully registered: " + props.Name);
+		root.sessions.push({
+			name: Helper.localizedName(props, Qt.locale().name),
+			path: path,
+			props: props
+		});
+		// Files load in any order, keep the default session stable across boots
+		root.sessions.sort((a, b) => a.path.localeCompare(b.path));
+		root.sessionsChanged();
+	}
+
+	/** Process to list the .desktop files (find keeps going when a directory is missing) */
 	property Process _procListSessions: Process {
-		command: ["ls", "-1", root.sessionsDir]
+		command: ["find"].concat(root.sessionDirs, ["-maxdepth", "1", "-name", "*.desktop"])
 		stdout: SplitParser {
 			onRead: function(data) {
-				root.paths.push(root.sessionsDir + data);
+				root.paths.push(data);
 			}
 		}
 
@@ -48,8 +68,8 @@ QtObject {
 		}
 
 		onExited: function(exitCode, exitStatus) {
-			if (exitCode !== 0 || root.paths.length === 0) {
-				console.error("No Wayland sessions found in " + root.sessionsDir);
+			if (root.paths.length === 0) {
+				console.error("No Wayland sessions found in " + root.sessionDirs.join(", "));
 			}
 			console.log("Found Wayland paths: " + root.paths);
 			root.pathsChanged();
@@ -64,20 +84,38 @@ QtObject {
 
 			required property string modelData
 
+			/** Parsed file, kept for the TryExec check */
+			property var props: ({})
+
 			path: Qt.resolvedUrl(sessionFile.modelData)
 			preload: true
 
 			onLoaded: {
-				const props = Helper.parseDesktopFile(sessionFile.text());
-				console.log("Session successfully registered: " + props.Name);
-				root.sessions.push({
-					name: props.Name ?? "",
-					path: sessionFile.modelData,
-					props: props
-				});
-				// Files load in any order, keep the default session stable across boots
-				root.sessions.sort((a, b) => a.path.localeCompare(b.path));
-				root.sessionsChanged();
+				sessionFile.props = Helper.parseDesktopFile(sessionFile.text());
+				// Entries that ask not to be shown
+				if (sessionFile.props.Hidden === "true" || sessionFile.props.NoDisplay === "true") {
+					console.log("Session hidden: " + sessionFile.modelData);
+					return;
+				}
+				// Entries whose program is not installed
+				if (sessionFile.props.TryExec) {
+					tryExec.running = true;
+					return;
+				}
+				root._register(sessionFile.modelData, sessionFile.props);
+			}
+
+			/** Check TryExec with the shell's own lookup */
+			property Process tryExec: Process {
+				command: ["sh", "-c", "command -v -- \"$0\" >/dev/null 2>&1", sessionFile.props.TryExec ?? ""]
+
+				onExited: function(exitCode, exitStatus) {
+					if (exitCode === 0) {
+						root._register(sessionFile.modelData, sessionFile.props);
+					} else {
+						console.log("Session skipped, TryExec not found: " + sessionFile.modelData);
+					}
+				}
 			}
 		}
 	}
