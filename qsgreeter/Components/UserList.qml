@@ -109,8 +109,9 @@ Item {
 
 				onClicked: root.selected(modelData)
 
-				// Default enter action
+				// Default enter action, Return and the keypad's Enter
 				Keys.onReturnPressed: root.selected(modelData)
+				Keys.onEnterPressed: root.selected(modelData)
 
 				// Focus the first user so Enter selects it
 				Component.onCompleted: {

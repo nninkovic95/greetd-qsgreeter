@@ -141,7 +141,7 @@ ColumnLayout {
 						root.badPassword = false;
 					}
 
-					Keys.onReturnPressed: root.submit()
+					onAccepted: root.submit()
 
 					Component.onCompleted: {
 						forceActiveFocus();
