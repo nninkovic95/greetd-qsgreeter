@@ -38,10 +38,8 @@ ColumnLayout {
 		onFailure: {
 			root.badPassword = true;
 			passwordInput.clear();
-			// An informational message gives way to the failure, an error stays
-			if (!root.messageError) {
-				root.message = "";
-			}
+			// Keep whatever PAM said during the attempt: a lockout notice is an
+			// informational message, and it explains why the password was refused
 		}
 	}
 
