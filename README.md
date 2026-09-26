@@ -89,6 +89,29 @@ the greeter, maximizes its window, and exits Hyprland once the greeter quits so 
 the selected session. `start-hyprland` is Hyprland's watchdog launcher; running the `Hyprland`
 binary directly works too but shows a warning banner on the greeter screen.
 
+### Testing on real greetd
+Try the greeter from a text console before you reboot into it, and keep a way back:
+
+1. Install the package (`paru -S qsgreeter-hyprland-git`, or `sudo make install` from a clone).
+2. Back up greetd's config: `sudo cp /etc/greetd/config.toml /etc/greetd/config.toml.bak`.
+3. Set `[default_session]` in `/etc/greetd/config.toml` to the `start-hyprland` command above,
+   with `user = "greeter"`.
+4. Switch to a spare console (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F2</kbd>), log in there, and run
+   `sudo systemctl restart greetd`. The greeter should appear on VT 1
+   (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F1</kbd>). Log in with it once before rebooting.
+
+If the screen stays black, the greeter never shows a user, or login fails, go back to the spare
+console with <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>F2</kbd> and restore the old config:
+
+```sh
+sudo cp /etc/greetd/config.toml.bak /etc/greetd/config.toml
+sudo systemctl restart greetd
+```
+
+To keep greetd but log in from a text prompt instead, use `agreety`, the text greeter that ships
+with greetd: `command = "agreety --cmd /bin/bash"`. `journalctl -u greetd -b` shows why the
+greeter failed.
+
 ## 🎨 Customization
 
 Configuration files are located at `/etc/xdg/quickshell/qsgreeter`. You can customize the look and feel by editing `colorscheme.json` and `style.json`. Both files are watched, so edits apply while the greeter is running. In `style.json`, `scale` multiplies every size (fonts, margins, buttons and avatars) at once.
