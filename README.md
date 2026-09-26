@@ -39,7 +39,8 @@ sudo make uninstall
 
 ### Arch Linux
 Available in the AUR as [qsgreeter-hyprland-git](https://aur.archlinux.org/packages/qsgreeter-hyprland-git).
-It builds from this repository and pulls in `greetd`, `quickshell`, `hyprland`, `glib2` and `accountsservice`.
+It builds from this repository and depends on `greetd`, `quickshell`, `glib2` and `accountsservice`;
+`hyprland` is an optional dependency, install it yourself to use the provided compositor config.
 
 ```sh
 paru -S qsgreeter-hyprland-git   # or: yay -S qsgreeter-hyprland-git
