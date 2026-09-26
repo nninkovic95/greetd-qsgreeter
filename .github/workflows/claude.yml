@@ -1,5 +1,9 @@
 name: Claude Code
 
+# @claude on an issue, PR, review or review comment. Only the owner and
+# collaborators can trigger it: the repo is public, and every run spends the
+# CLAUDE_CODE_OAUTH_TOKEN quota.
+
 on:
   issue_comment:
     types: [created]
@@ -10,41 +14,55 @@ on:
   pull_request_review:
     types: [submitted]
 
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   claude:
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      (github.event_name == 'issue_comment'
+        && contains(github.event.comment.body, '@claude')
+        && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review_comment'
+        && contains(github.event.comment.body, '@claude')
+        && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review'
+        && contains(github.event.review.body, '@claude')
+        && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association)) ||
+      (github.event_name == 'issues'
+        && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))
+        && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association))
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write        # push commits to branches / PR heads
+      pull-requests: write   # open PRs, comment
+      issues: write          # comment on issues
       id-token: write
-      actions: read # Required for Claude to read CI results on PRs
+      actions: read          # read CI results on PRs
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0     # full history: pkgver() in PKGBUILD counts commits
+
+      # qmllint gives Claude a syntax check for QML edits. Quickshell's own
+      # modules are not installed, so unresolved-import warnings are expected.
+      - name: Install QML tooling
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qt6-declarative-dev-tools
+          echo "/usr/lib/qt6/bin" >> "$GITHUB_PATH"
 
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-
-          # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
-
-          # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
-          # prompt: 'Update the pull request description to include a summary of changes.'
-
-          # Optional: Add claude_args to customize behavior and configuration
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
-          # claude_args: '--allowed-tools Bash(gh pr *)'
-
+          claude_args: >-
+            --max-turns 40
+            --allowed-tools "Bash(make install DESTDIR=*),Bash(make uninstall DESTDIR=*),Bash(qmllint *),Bash(git log *),Bash(git diff *),Bash(git status),Bash(git show *),Bash(find *),Bash(grep *),Bash(ls *),Bash(mktemp *),Bash(jq *)"
