@@ -98,8 +98,9 @@ jobs:
 
       # The real greeter QML on Xvfb with Mesa's software renderer, against the
       # stub Quickshell and greetd modules in tests/ui/stubs. Fails unless it
-      # lists the users, opens the login screen, recovers from a wrong password
-      # and launches the session with the right one.
+      # lists the users, opens the login screen with keyboard focus in the
+      # password field, recovers from a wrong password without losing focus,
+      # and launches the session with the right one and the XDG variables.
       - name: Run the greeter through login
         run: tests/ui/run.sh ui-screenshots
 
