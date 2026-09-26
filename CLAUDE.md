@@ -33,12 +33,11 @@ There is no build step. To check one:
 - Lint the QML: `.github/scripts/qmllint.sh`. It builds the `qs.*` module tree Quickshell
   creates at runtime so those imports resolve, fails on syntax errors, and reports the rest
   as warnings. Some Quickshell types still will not resolve outside a session; act on real
-  syntax and type errors. The duplicate `proc` id in `UserService.qml` is a known false
-  positive (the second one is inside a delegate, its own scope).
+  syntax and type errors.
 - Run the greeter through login: `QT_QPA_PLATFORM=offscreen tests/ui/run.sh` (or without
   the variable to use Xvfb, as CI does). Screenshots land in `ui-screenshots/`. A failed check
   means the greeter did not reach a usable state; `HARNESS-WARNING` lines are known problems
-  that do not fail the run yet (no keyboard focus in the password field, PR #7 bug 2).
+  that do not fail the run.
 
 ## Review rules
 
