@@ -66,8 +66,8 @@ Item {
 	BusyIndicator {
 		id: busyComponent
 		anchors.centerIn: parent
-		Layout.preferredWidth: Theme.style.accountSize
-		Layout.preferredHeight: Theme.style.accountSize
+		width: Theme.style.accountSize
+		height: Theme.style.accountSize
 		opacity: 0
 	}
 
