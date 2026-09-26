@@ -50,6 +50,10 @@ ColumnLayout {
 
 	/** Make a login attempt with the typed password and the selected session */
 	function submit() {
+		if (!root.session) {
+			root.message = L10n.sessionListError;
+			return;
+		}
 		root.loginService.login(root.user, passwordInput.text, root.session.props);
 	}
 

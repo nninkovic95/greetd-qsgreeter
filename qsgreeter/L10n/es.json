@@ -1,5 +1,6 @@
 {
 	"dateMessage": "Hoy es",
 	"dateFormat": "dd/MM/yyyy",
-	"userListEmpty": "No se encontraron cuentas de usuario"
+	"userListEmpty": "No se encontraron cuentas de usuario",
+	"sessionListError": "No se encontraron sesiones de Wayland"
 }

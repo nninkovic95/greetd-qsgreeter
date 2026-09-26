@@ -27,6 +27,7 @@ Singleton {
 	property string userPrompt: "<l10n.userPrompt(%1)>"
 	property string passwordPlaceholder: "<l10n.passwordPlaceholder>"
 	property string passwordError: "<l10n.passwordError>"
+	property string sessionListError: "<l10n.sessionListError>"
 
 	ConfigLoader {
 		target: l10n

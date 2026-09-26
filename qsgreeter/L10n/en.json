@@ -11,5 +11,6 @@
 	"userWelcome": "Welcome back, %1",
 	"userPrompt": "Login for %1",
 	"passwordPlaceholder": "Password",
-	"passwordError": "Wrong password"
+	"passwordError": "Wrong password",
+	"sessionListError": "No Wayland sessions found"
 }

@@ -47,7 +47,10 @@ QtObject {
 			root.paths = [];
 		}
 
-		onExited: {
+		onExited: function(exitCode, exitStatus) {
+			if (exitCode !== 0 || root.paths.length === 0) {
+				console.error("No Wayland sessions found in " + root.sessionsDir);
+			}
 			console.log("Found Wayland paths: " + root.paths);
 			root.pathsChanged();
 		}
