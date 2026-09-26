@@ -20,7 +20,7 @@ Item {
 	/* List of users */
 	Component {
 		id: userList
-		Item {
+		FocusScope {
 			UserList {
 				anchors.centerIn: parent
 				onSelected: function(user) {
@@ -34,7 +34,7 @@ Item {
 	/* Password prompt for selected user */
 	Component {
 		id: userLogin
-		Item {
+		FocusScope {
 			UserLogin {
 				user: root.user
 				anchors.centerIn: parent
