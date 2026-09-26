@@ -58,9 +58,9 @@ function run(command) {
 		            : { stdout: "", exitCode: 1 };
 	}
 	if (command[0] === "find" && command.indexOf("-maxdepth") !== -1) {
-		// find <dir>... -maxdepth 1 -name '*.desktop': list the fixture directory,
-		// report the others as missing (exit code 1) the way find does
-		const dirs = command.slice(1, command.indexOf("-maxdepth"));
+		// find [-H] <dir>... -maxdepth 1 -name '*.desktop': list the fixture
+		// directory, report the others as missing (exit code 1) the way find does
+		const dirs = command.slice(1, command.indexOf("-maxdepth")).filter(arg => !arg.startsWith("-"));
 		const known = dirs.filter(d => d + "/" === sessionsDir);
 		return {
 			stdout: known.map(d => d + "/hyprland.desktop\n").join(""),

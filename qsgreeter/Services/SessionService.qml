@@ -53,9 +53,13 @@ QtObject {
 		root.sessionsChanged();
 	}
 
-	/** Process to list the .desktop files (find keeps going when a directory is missing) */
+	/**
+	 * Process to list the .desktop files. find keeps going when a directory
+	 * is missing, and -H follows a wayland-sessions directory that is itself
+	 * a symlink (a common way to share one list between data directories)
+	 */
 	property Process _procListSessions: Process {
-		command: ["find"].concat(root.sessionDirs, ["-maxdepth", "1", "-name", "*.desktop"])
+		command: ["find", "-H"].concat(root.sessionDirs, ["-maxdepth", "1", "-name", "*.desktop"])
 		stdout: SplitParser {
 			onRead: function(data) {
 				root.paths.push(data);
