@@ -61,6 +61,9 @@ QtObject {
 
 	// Password/Session prompt dialog border radius
 	property int promptInputRadius: 10
+
+	// Password/Session prompt border width
+	property int promptInputBorderWidth: 1
 	
 	// Element scale grow and shrink on hover/click
 	property real animationBounce: 0.2

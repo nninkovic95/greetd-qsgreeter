@@ -17,6 +17,7 @@
 	"promptSize": 200,
 	"promptInputPadding": 8,
 	"promptInputRadius": 10,
+	"promptInputBorderWidth": 1,
 	"animationBounce": 0.2,
 	"animationSpeedShort": 150,
 	"animationSpeedLarge": 300

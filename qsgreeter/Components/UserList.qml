@@ -77,7 +77,6 @@ Item {
 		anchors.centerIn: parent
 		opacity: 0
 		text: L10n.userListError
-		padding: 40
 	}
 
 	/* No accounts message */
