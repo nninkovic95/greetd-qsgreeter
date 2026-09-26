@@ -101,7 +101,7 @@ Item {
 				required property int index
 				required property var modelData
 
-				realName: modelData.RealName
+				realName: modelData.DisplayName
 				iconPath: modelData.IconFile
 
 				Layout.preferredWidth: Theme.style.accountSize

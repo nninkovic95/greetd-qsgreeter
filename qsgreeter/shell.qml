@@ -49,7 +49,7 @@ FloatingWindow {
 				horizontalCenter: parent.horizontalCenter
 			}
 			/* Show either the date or a welcome message */
-			message: users.user ? L10n.userWelcome.arg(users.user.RealName) : ""
+			message: users.user ? L10n.userWelcome.arg(users.user.DisplayName) : ""
 		}
 
 		/* User list and login prompt */

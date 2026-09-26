@@ -81,7 +81,7 @@ ColumnLayout {
 
 		/* User Face Icon */
 		UserButton {
-			realName: root.user ? root.user.RealName : ""
+			realName: root.user ? root.user.DisplayName : ""
 			iconPath: root.user ? root.user.IconFile : ""
 			interactive: false
 

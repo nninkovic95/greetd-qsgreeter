@@ -23,6 +23,7 @@ QtObject {
 	 *	- Uid
 	 *	- UserName
 	 *	- RealName
+	 *	- DisplayName (RealName, or UserName when that is empty)
 	 *	- IconFile
 	 */
 	property var users: []
@@ -148,7 +149,10 @@ QtObject {
 				if (exitCode !== 0) {
 					console.error("Failed to retrieve data for path: " + getUser.modelData);
 				} else {
-					root.users.push(Helper.parseUserData(userDataOutput.text));
+					const data = Helper.parseUserData(userDataOutput.text);
+					// Accounts without a real name are shown by user name
+					data.DisplayName = data.RealName || data.UserName;
+					root.users.push(data);
 				}
 				root._workerDone();
 			}
