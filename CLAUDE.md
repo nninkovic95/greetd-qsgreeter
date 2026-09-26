@@ -1,15 +1,16 @@
 # qsgreeter
 
 A QuickShell (QML) login greeter for greetd. Fork of `taleroangel/greetd-qsgreeter`; this fork
-adds a Hyprland session config alongside the upstream niri one.
+replaces the upstream niri config with a Hyprland one.
 
 ## Layout
 
 - `qsgreeter/` — the QuickShell config, installed to `/etc/xdg/quickshell/qsgreeter`.
-  `shell.qml` is the entry point. `Services/` talks to greetd, logind and the user/session lists;
+  `shell.qml` is the entry point. `Services/` talks to greetd, reads users from AccountsService
+  through gdbus, lists the session files and runs systemctl for the power buttons;
   `Components/` is UI; `Theme/` reads `colorscheme.json` and `style.json`; `L10n/` holds the
   translations (`en.json`, `es.json`).
-- `niri/`, `hyprland/` — compositor configs that launch the greeter, installed to `/etc/greetd/`.
+- `hyprland/` — the compositor config that launches the greeter, installed to `/etc/greetd/`.
 - `Makefile` — `install` / `uninstall`, honours `DESTDIR` and `PREFIX`.
 - `PKGBUILD` — Arch `-git` package that runs `make install`.
 - `aur/PKGBUILD` — release package (`qsgreeter-hyprland`) built from a `v*` tag tarball.
@@ -63,7 +64,7 @@ Do not comment on formatting or style alone.
 
 ## Making changes
 
-- Keep changes small and in the style of the surrounding QML (4-space indent, `id` first,
+- Keep changes small and in the style of the surrounding QML (tabs for indentation, `id` first,
   properties before signal handlers before children).
 - Commit messages: imperative summary line, body explaining why.
 - Do not bump `pkgver` by hand; `pkgver()` computes it.

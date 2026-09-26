@@ -18,11 +18,13 @@ A [QuickShell](https://quickshell.org/)-based greeter for [greetd](https://sr.ht
 - A Wayland compositor to run the greeter in; a [Hyprland](https://hypr.land) configuration is provided
 - systemd: the shutdown and reboot buttons run `systemctl poweroff` and `systemctl reboot` as the greeter user
 
-Sessions are offered from the `.desktop` files in `/usr/share/wayland-sessions/`.
+Sessions are read from the `.desktop` files in the `wayland-sessions` directory of every `XDG_DATA_DIRS`
+entry (`/usr/local/share` and `/usr/share` by default). Entries marked `Hidden` or `NoDisplay`, or whose
+`TryExec` program is not installed, are skipped.
 
 ## 🪛 Installation
-Use _make_ to copy the greeter into `/etc/xdg/quickshell/qsgreeter`. If the `Hyprland` binary is found
-on the machine, `make install` also copies `qsgreeter-hyprland.lua` into `/etc/greetd/`.
+Use _make_ to copy the greeter into `/etc/xdg/quickshell/qsgreeter` and `qsgreeter-hyprland.lua` into
+`/etc/greetd/`.
 
 ```sh
 git clone https://github.com/nninkovic95/greetd-qsgreeter
@@ -68,7 +70,7 @@ quickshell -c qsgreeter
 i.e, running from Hyprland `hl.exec_cmd("quickshell -c qsgreeter")`
 
 ### Using with Hyprland
-If you have [Hyprland](https://hypr.land) installed, you can use the provided [Hyprland configuration file](hyprland/qsgreeter-hyprland.lua) to start the greeter automatically. Place the configuration file at `/etc/greetd/qsgreeter-hyprland.lua` (`make install` does this when Hyprland is present, and so does the AUR package) and edit `/etc/greetd/config.toml` to launch Hyprland with the specified configuration:
+If you have [Hyprland](https://hypr.land) installed, you can use the provided [Hyprland configuration file](hyprland/qsgreeter-hyprland.lua) to start the greeter automatically. Place the configuration file at `/etc/greetd/qsgreeter-hyprland.lua` (`make install` and the AUR package do this) and edit `/etc/greetd/config.toml` to launch Hyprland with the specified configuration:
 
 ```toml
 [terminal]
@@ -92,7 +94,7 @@ Since the greeter is written entirely in **QML**, you can also rearrange element
 
 ### Language
 
-The greeter follows the locale of its own process (`LANG`), which is normally the system locale. Translations live in `qsgreeter/L10n/`: `en.json` is complete, `es.json` currently translates only the date line, and any other language falls back to English.
+The greeter follows the locale of its own process (`LANG`), which is normally the system locale. Translations live in `qsgreeter/L10n/` (`en.json`, `es.json`); any other language, and any key a translation lacks, falls back to English.
 
 ## 🤖 AI Disclosure
 Code was written entirely by me, but AI was used for technical guidance
