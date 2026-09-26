@@ -69,6 +69,8 @@ Item {
 		width: Theme.style.accountSize
 		height: Theme.style.accountSize
 		opacity: 0
+		// Stop animating once faded out, an invisible spinner still redraws every frame
+		running: opacity > 0
 	}
 
 	/* Error message */
