@@ -83,6 +83,10 @@ QtObject {
 	 * animation timings). Safe to call again after a reload: a property
 	 * still holding the value written last time is scaled from its
 	 * remembered raw value rather than compounded.
+	 *
+	 * The fields are pixel sizes, so the result is rounded to whole pixels
+	 * (an int property would otherwise truncate 2 * 0.4 to 0) and a size
+	 * that was set never scales away completely: a 1 px border stays drawn.
 	 */
 	function applyScale() {
 		const scale = root.scale;
@@ -93,7 +97,7 @@ QtObject {
 			}
 			const raw = (prop in root._scaled && root._scaled[prop] === value) ? root._raw[prop] : value;
 			root._raw[prop] = raw;
-			root[prop] = raw * scale;
+			root[prop] = (raw > 0) ? Math.max(1, Math.round(raw * scale)) : Math.round(raw * scale);
 			root._scaled[prop] = root[prop];
 		}
 	}
