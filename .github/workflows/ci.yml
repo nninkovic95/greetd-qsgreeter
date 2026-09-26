@@ -49,7 +49,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Install tools
-        run: pacman -Syu --noconfirm --needed base-devel git pacman-contrib greetd quickshell
+        run: pacman -Syu --noconfirm --needed base-devel git pacman-contrib greetd quickshell glib2 accountsservice
 
       - name: Checkout repository
         uses: actions/checkout@v4
