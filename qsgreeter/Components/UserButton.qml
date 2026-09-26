@@ -63,14 +63,22 @@ Item {
 
 		Image {
 			id: face
+			anchors.fill: parent
 			source: root.iconPath
+			// Cover the circle and decode at no more than twice its size
+			fillMode: Image.PreserveAspectCrop
+			sourceSize.width: Math.round(parent.width * 2)
+			sourceSize.height: Math.round(parent.height * 2)
 			asynchronous: true
 			visible: false
 		}
 
 		MultiEffect {
 			anchors.fill: parent
-			source: face
+			// The rendered (cropped) item, not the raw image texture
+			source: ShaderEffectSource {
+				sourceItem: face
+			}
 			maskEnabled: true
 			maskSpreadAtMax: 1.0
 			maskSpreadAtMin: 1.0
