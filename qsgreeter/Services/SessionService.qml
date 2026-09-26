@@ -75,6 +75,8 @@ QtObject {
 					path: sessionFile.modelData,
 					props: props
 				});
+				// Files load in any order, keep the default session stable across boots
+				root.sessions.sort((a, b) => a.path.localeCompare(b.path));
 				root.sessionsChanged();
 			}
 		}

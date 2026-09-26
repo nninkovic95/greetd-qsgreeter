@@ -63,6 +63,8 @@ QtObject {
 
 	/** Stop loading and publish the users gathered so far */
 	function _finish() {
+		// Workers finish in any order, keep the list stable across boots
+		root.users.sort((a, b) => a.Uid - b.Uid);
 		console.log(`Finished parsing of <${ root.users.length }> users`);
 		root.busy = false;
 		root.ready = true;
