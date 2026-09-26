@@ -32,7 +32,7 @@ QtObject {
 	// Outer window border (applies to dialogs and comboboxes)
 	property int borderWidth: 2
 
-	// Outer window border radius (applies to dialogs and comboboxes
+	// Outer window border radius (applies to dialogs and comboboxes)
 	property int borderRadius: 10
 
 	// Space between elements and border

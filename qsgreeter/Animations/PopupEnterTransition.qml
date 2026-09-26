@@ -10,7 +10,7 @@ import qs.Theme
 Transition {
 	NumberAnimation {
 		property: "scale"
-		easing: Easing.InQuad
+		easing.type: Easing.InQuad
 		duration: Theme.style.animationSpeedShort
 		from: (1 - Theme.style.animationBounce)
 		to: 1.0

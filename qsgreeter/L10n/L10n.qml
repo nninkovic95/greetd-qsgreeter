@@ -2,11 +2,10 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
 
 import qs.Config
 
-import "locale.js" as Locale
+import "locale.js" as LocaleHelper
 
 /**
  * L10n.qml
@@ -30,6 +29,6 @@ Singleton {
 
 	ConfigLoader {
 		target: l10n
-		src: Quickshell.shellDir + "/" + Locale.getLocalePath()
+		src: Quickshell.shellDir + "/" + LocaleHelper.getLocalePath()
 	}
 }
