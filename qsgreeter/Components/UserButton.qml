@@ -28,12 +28,19 @@ Item {
 	implicitWidth: Theme.style.accountSize
 	implicitHeight: Theme.style.accountSize
 
+	// Tab moves between users, Return or Enter picks the focused one
+	activeFocusOnTab: root.interactive
+
 	/* Children */
 	Rectangle {
 		id: account
 		anchors.fill: parent
 		radius: (width / 2)
 		color: root.theme.background.inactive
+
+		/* Keyboard focus ring */
+		border.width: root.activeFocus ? Theme.style.borderWidth : 0
+		border.color: Theme.colors.primary
 
 		/* Profile Image Fallback */
 		Text {

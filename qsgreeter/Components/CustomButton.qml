@@ -29,6 +29,10 @@ Button {
 		radius: (Math.max(root.height, root.width) / 2)
 		color: root.theme.background.inactive
 
+		/* Keyboard focus ring, only when focus came from the keyboard */
+		border.width: root.visualFocus ? Theme.style.borderWidth : 0
+		border.color: Theme.colors.primary
+
 		Behavior on color {
 			ColorAnimation {
 				duration: Theme.style.animationSpeedShort
