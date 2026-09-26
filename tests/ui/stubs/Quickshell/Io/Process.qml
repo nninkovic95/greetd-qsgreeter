@@ -5,8 +5,9 @@ import "fakesystem.js" as System
 /*
  * Stub of Quickshell's Process. Starts when `running` becomes true (or is
  * true at completion), answers from the fake system on the next event loop
- * turn, feeds stdout, then emits `exited`. A command with no fixture never
- * emits `exited`, like a command Quickshell fails to start.
+ * turn, feeds stdout, emits `exited` and only then clears `running`, in
+ * Quickshell's order. A command with no fixture never emits `exited`, like
+ * a command Quickshell fails to start: it just stops running.
  */
 QtObject {
 	id: root
@@ -56,8 +57,8 @@ QtObject {
 			root.stdout._feed(result.stdout);
 			root.stdout._finish();
 		}
-		root.running = false;
 		root.exited(result.exitCode, 0);
+		root.running = false;
 	}
 
 	onRunningChanged: {
