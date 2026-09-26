@@ -12,5 +12,6 @@
 	"userPrompt": "Iniciar sesión como %1",
 	"passwordPlaceholder": "Contraseña",
 	"passwordError": "Contraseña incorrecta",
-	"sessionListError": "No se encontraron sesiones de Wayland"
+	"sessionListError": "No se encontraron sesiones de Wayland",
+	"greetdUnavailable": "greetd no está disponible"
 }

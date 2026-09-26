@@ -19,21 +19,29 @@ ColumnLayout {
 	/** Currently selected session */
 	property var session: undefined
 
-	/** Message to show instead of name */
+	/** Message to show above the prompt */
 	property string message: ""
+
+	/** The message is an error, keep it over the wrong-password text and show it in red */
+	property bool messageError: false
 
 	/** Wrong password animation */
 	property bool badPassword: false
 
 	/** Service for triggering login */
 	property LoginService loginService: LoginService {
-		onMessage: function(message) {
+		onMessage: function(message, error) {
 			root.message = message;
+			root.messageError = error;
 		}
 
 		onFailure: {
 			root.badPassword = true;
 			passwordInput.clear();
+			// An informational message gives way to the failure, an error stays
+			if (!root.messageError) {
+				root.message = "";
+			}
 		}
 	}
 
@@ -51,8 +59,16 @@ ColumnLayout {
 
 	/** Make a login attempt with the typed password and the selected session */
 	function submit() {
+		root.message = "";
+		root.messageError = false;
 		if (!root.session) {
 			root.message = L10n.sessionListError;
+			root.messageError = true;
+			return;
+		}
+		if (!root.loginService.available) {
+			root.message = L10n.greetdUnavailable;
+			root.messageError = true;
 			return;
 		}
 		root.loginService.login(root.user, passwordInput.text, root.session);
@@ -60,12 +76,12 @@ ColumnLayout {
 
 	/** Message text */
 	Text {
-		text: root.badPassword ? L10n.passwordError : root.message
+		text: (root.message !== "") ? root.message : (root.badPassword ? L10n.passwordError : "")
 		visible: root.badPassword || root.message !== ""
 		Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
 		Layout.bottomMargin: Theme.style.accountSpacing
 
-		color: Theme.colors.error
+		color: (root.badPassword || root.messageError) ? Theme.colors.error : Theme.colors.surfaceContrast
 		font.family: Theme.style.fontFamilyParagraph
 		font.pixelSize: Theme.style.fontSizeParagraph
 	}

@@ -12,5 +12,6 @@
 	"userPrompt": "Login for %1",
 	"passwordPlaceholder": "Password",
 	"passwordError": "Wrong password",
-	"sessionListError": "No Wayland sessions found"
+	"sessionListError": "No Wayland sessions found",
+	"greetdUnavailable": "greetd is not available"
 }

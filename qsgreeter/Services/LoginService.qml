@@ -17,11 +17,14 @@ QtObject {
 	/** True while greetd is authenticating on our behalf */
 	property bool _active: false
 
+	/** False when the greeter is not running under greetd */
+	readonly property bool available: Greetd.available
+
 	/** Issued when bad password is provided */
 	signal failure()
 
-	/** Greetd issued a message */
-	signal message(message: string)
+	/** Greetd issued a message, `error` is true for PAM error messages and greetd errors */
+	signal message(message: string, error: bool)
 
 	/**
 	 * Start a login attempt
@@ -77,11 +80,19 @@ QtObject {
 				// (echoResponse false) get the stored password, visible ones
 				// get an empty string
 				Greetd.respond(echoResponse ? "" : root._password);
-			} else if (!error) {
-				// Informational message: show it, the conversation continues
-				root.message(message);
+			} else {
+				// Info or error message: show it, the conversation continues
+				// (an error is normally followed by an auth failure)
+				root.message(message, error);
 			}
-			// Error messages are ignored
+		}
+
+		function onError(error) {
+			// greetd refused a request (for example the session failed to
+			// start); quickshell has already dropped the session
+			console.error("greetd error: " + error);
+			root.clear();
+			root.message(error, true);
 		}
 
 		function onAuthFailure(_) {

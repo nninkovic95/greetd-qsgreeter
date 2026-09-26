@@ -29,6 +29,7 @@ Singleton {
 	property string passwordPlaceholder: "Password"
 	property string passwordError: "Wrong password"
 	property string sessionListError: "No Wayland sessions found"
+	property string greetdUnavailable: "greetd is not available"
 
 	ConfigLoader {
 		target: l10n
