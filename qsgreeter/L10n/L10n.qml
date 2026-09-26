@@ -14,20 +14,21 @@ import "locale.js" as LocaleHelper
 Singleton {
 	id: l10n
 
-	property string dateMessage: "<l10n.dateMessage>"
-	property string dateFormat: "<l10n.dateFormat>"
-	property string dialogConfirmAction: "<l10n.dialogConfirmAction>"
-	property string dialogAccept: "<l10n.dialogAccept>"
-	property string dialogCancel: "<l10n.dialogCancel>"
-	property string dialogShutdown: "<l10n.dialogShutdown>"
-	property string dialogReboot: "<l10n.dialogReboot>"
-	property string userListError: "<l10n.userListError>"
-	property string userListEmpty: "<l10n.userListEmpty>"
-	property string userWelcome: "<l10n.userWelcome(%1)>"
-	property string userPrompt: "<l10n.userPrompt(%1)>"
-	property string passwordPlaceholder: "<l10n.passwordPlaceholder>"
-	property string passwordError: "<l10n.passwordError>"
-	property string sessionListError: "<l10n.sessionListError>"
+	/* Defaults are English, a translation file overrides the keys it has */
+	property string dateMessage: "Today is"
+	property string dateFormat: "yyyy-MM-dd"
+	property string dialogConfirmAction: "Confirm action"
+	property string dialogAccept: "Accept"
+	property string dialogCancel: "Cancel"
+	property string dialogShutdown: "Are you sure you want to shutdown?"
+	property string dialogReboot: "Are you sure you want to reboot?"
+	property string userListError: "Unable to retrieve users from D-Bus"
+	property string userListEmpty: "No user accounts found"
+	property string userWelcome: "Welcome back, %1"
+	property string userPrompt: "Login for %1"
+	property string passwordPlaceholder: "Password"
+	property string passwordError: "Wrong password"
+	property string sessionListError: "No Wayland sessions found"
 
 	ConfigLoader {
 		target: l10n
