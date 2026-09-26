@@ -106,6 +106,8 @@ QtObject {
 			// From here the session belongs to greetd, never cancel it
 			root._active = false;
 			Greetd.launch([root._sessionExec], root._sessionEnv);
+			// greetd has the password, drop our copy
+			root._password = undefined;
 		}
 	}
 
