@@ -2,6 +2,8 @@
 
 A [QuickShell](https://quickshell.org/)-based greeter for [greetd](https://sr.ht/~kennylevinsen/greetd/). It provides a simple QML-based login interface for Wayland.
 
+Based on [taleroangel/greetd-qsgreeter](https://github.com/taleroangel/greetd-qsgreeter) (MIT). This version swaps the niri setup for Hyprland, makes the greeter fully usable from the keyboard, shows PAM and greetd errors instead of failing silently, and adds CI and the AUR package [qsgreeter-hyprland-git](https://aur.archlinux.org/packages/qsgreeter-hyprland-git).
+
 | User List | Login Screen |
 | :---: | :---: |
 | ![Users](docs/screenshot_users.png) | ![Login](docs/screenshot_login.png) |
@@ -123,4 +125,4 @@ Since the greeter is written entirely in **QML**, you can also rearrange element
 The greeter follows the locale of its own process (`LANG`), which is normally the system locale. Translations live in `qsgreeter/L10n/` (`en.json`, `es.json`); any other language, and any key a translation lacks, falls back to English.
 
 ## 🤖 AI Disclosure
-Code was written entirely by me, but AI was used for technical guidance
+The original greeter was written by taleroangel. The changes in this version were written mostly by Claude Code under my direction; I tested them on my own greetd setup.
